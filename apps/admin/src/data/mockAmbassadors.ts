@@ -1,0 +1,1 @@
+export const mockAmbassadors=[{id:'AMB-001',name:'Refilwe Sello',campus:'University of the Free State'},{id:'AMB-002',name:'Tshepo Mokoena',campus:'Central University of Technology'},{id:'AMB-003',name:'Onthatile Motsoeneng',campus:'Bloemfontein Central'}] as const;
