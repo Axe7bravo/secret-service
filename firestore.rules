@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && (request.auth.token.admin == true || request.auth.token.role == 'admin'); }
+
+    match /operations/{operationId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+    match /operationInternal/{operationId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+    match /operationActivity/{activityId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+    match /customerOperations/{operationId} {
+      allow read: if signedIn() && (resource.data.customerId == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+    match /payments/{paymentId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

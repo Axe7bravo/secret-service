@@ -1,0 +1,3 @@
+import type { CustomerOperation } from '../types/customer';
+const operations:readonly CustomerOperation[]=[{operationId:'SS-2601',createdAt:'2026-08-30T08:15:00Z',packageName:'Soft Revenge',amount:399,status:'REVIEW_REQUIRED',paymentStatus:'PAID',recipient:{name:'Lerato Ndlovu',campus:'University of the Free State',residence:'Kovsie Residence'},delivery:{requestedDate:'2026-09-02',requestedWindow:'14:00–16:00',location:'Main reception'},anonymousMessage:'A harmless reminder that deadlines matter.'}];
+export const customerOperationsRepository={list:():readonly CustomerOperation[]=>operations,getById:(operationId:string):CustomerOperation|undefined=>operations.find(operation=>operation.operationId===operationId)};
