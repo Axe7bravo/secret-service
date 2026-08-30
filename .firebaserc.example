@@ -1,0 +1,12 @@
+{
+  "projects": { "default": "YOUR_FIREBASE_PROJECT_ID" },
+  "targets": {
+    "YOUR_FIREBASE_PROJECT_ID": {
+      "hosting": {
+        "web": ["YOUR_WEB_SITE_ID"],
+        "admin": ["YOUR_ADMIN_SITE_ID"],
+        "customer": ["YOUR_CUSTOMER_SITE_ID"]
+      }
+    }
+  }
+}

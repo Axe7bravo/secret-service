@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Active Dossiers // Secret Service</title>
+  <meta name="description" content="Browse classified operations dossiers including secret admirer dispatches, soft revenge, and VIP decoy escorts.">
+  <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+
+  <div class="custom-cursor"></div>
+  <div class="custom-cursor-dot"></div>
+
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span class="logo-icon">S</span> SECRET SERVICE <span class="logo-plaque">EST. 1952</span>
+      </a>
+      <button class="burger-menu" aria-label="Toggle Navigation">
+        <span class="burger-line"></span>
+        <span class="burger-line"></span>
+        <span class="burger-line"></span>
+      </button>
+      <ul class="nav-menu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="about.html" class="nav-link">The Directive</a></li>
+        <li><a href="dossiers.html" class="nav-link">Dossiers</a></li>
+        <li><a href="protocol.html" class="nav-link">Protocol</a></li>
+        <li><a href="contact.html" class="nav-link">Contact</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main style="padding-top: 8rem; padding-bottom: 6rem;">
+    <section class="active-operations">
+      <div class="section-container">
+        <div class="section-header">
+          <span class="section-subtitle">OPERATIONAL PORTFOLIO</span>
+          <h1 class="hero-title" style="font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 1rem;">Active Dossiers</h1>
+          <p style="max-width: 600px; margin: 0 auto;">Select a dossier file to examine its operational profile, pricing details, and staging clearance levels, then add it to your dispatch pipeline.</p>
+        </div>
+        <div class="operations-grid">
+          <article class="classified-card" data-id="OP_01A">
+            <div class="card-img-container"><img src="/assets/classified_case.jpg" alt="Secret Admirer Case"></div>
+            <div class="card-content">
+              <div>
+                <div class="card-meta"><span>STAGE: STAGING</span><span class="card-price">$149.00</span></div>
+                <h3 class="card-title">Secret Admirer</h3>
+                <p class="card-desc">An elegant and mysterious parcel containing bespoke messages and cryptic keys delivered by an agent in formal wear.</p>
+                <div class="card-tags"><span class="card-tag">Level 1 Clearance</span><span class="card-tag">Hand Delivery</span></div>
+              </div>
+              <div class="card-action"><button class="btn btn-secondary" onclick="openDossierModal('secret-admirer')">[ Add To Dispatch ]</button></div>
+            </div>
+          </article>
+          <article class="classified-card" data-id="OP_02B">
+            <div class="card-img-container"><img src="/assets/classified_case.jpg" alt="Soft Revenge Case"></div>
+            <div class="card-content">
+              <div>
+                <div class="card-meta"><span>STAGE: RECON</span><span class="card-price">$299.00</span></div>
+                <h3 class="card-title">Soft Revenge</h3>
+                <p class="card-desc">Minor covert inconveniences executed with theatrical flair. Discretionary pranks and custom disappointments delivered in person.</p>
+                <div class="card-tags"><span class="card-tag">Level 2 Clearance</span><span class="card-tag">Psy-Ops</span></div>
+              </div>
+              <div class="card-action"><button class="btn btn-secondary" onclick="openDossierModal('soft-revenge')">[ Add To Dispatch ]</button></div>
+            </div>
+          </article>
+          <article class="classified-card" data-id="OP_03C">
+            <div class="card-img-container"><img src="/assets/classified_case.jpg" alt="Confession Case"></div>
+            <div class="card-content">
+              <div>
+                <div class="card-meta"><span>STAGE: STAGING</span><span class="card-price">$199.00</span></div>
+                <h3 class="card-title">The Confession</h3>
+                <p class="card-desc">Unburden your secrets. An agent will deliver an elegantly handwritten confession or a security-sealed ledger directly to the target.</p>
+                <div class="card-tags"><span class="card-tag">Level 1 Clearance</span><span class="card-tag">Secure Seal</span></div>
+              </div>
+              <div class="card-action"><button class="btn btn-secondary" onclick="openDossierModal('confession')">[ Add To Dispatch ]</button></div>
+            </div>
+          </article>
+          <article class="classified-card" data-id="OP_04D">
+            <div class="card-img-container"><img src="/assets/classified_case.jpg" alt="Roast Case"></div>
+            <div class="card-content">
+              <div>
+                <div class="card-meta"><span>STAGE: DESIGN</span><span class="card-price">$249.00</span></div>
+                <h3 class="card-title">Roast Your Friend</h3>
+                <p class="card-desc">A customized comedic indictment read aloud in a public setting by a deadpan agent wearing standard formal suits.</p>
+                <div class="card-tags"><span class="card-tag">Level 2 Clearance</span><span class="card-tag">Live Reading</span></div>
+              </div>
+              <div class="card-action"><button class="btn btn-secondary" onclick="openDossierModal('roast-your-friend')">[ Add To Dispatch ]</button></div>
+            </div>
+          </article>
+          <article class="classified-card" data-id="OP_05E">
+            <div class="card-img-container"><img src="/assets/classified_case.jpg" alt="Office Prank Case"></div>
+            <div class="card-content">
+              <div>
+                <div class="card-meta"><span>STAGE: AUDIT</span><span class="card-price">$450.00</span></div>
+                <h3 class="card-title">Office Prank Kit</h3>
+                <p class="card-desc">Stage a series of subtle, ongoing psychological adjustments to their office space. Includes custom inspector protocols.</p>
+                <div class="card-tags"><span class="card-tag">Level 3 Clearance</span><span class="card-tag">Multi-Step</span></div>
+              </div>
+              <div class="card-action"><button class="btn btn-secondary" onclick="openDossierModal('office-prank-kit')">[ Add To Dispatch ]</button></div>
+            </div>
+          </article>
+          <article class="classified-card" data-id="OP_06F">
+            <div class="card-img-container"><img src="/assets/classified_case.jpg" alt="Mystery Case"></div>
+            <div class="card-content">
+              <div>
+                <div class="card-meta"><span>STAGE: ACTIVE</span><span class="card-price">$349.00</span></div>
+                <h3 class="card-title">Midnight Mystery</h3>
+                <p class="card-desc">A delivery staged at midnight containing cryptograms, locking puzzles, and geolocation data coordinates to explore.</p>
+                <div class="card-tags"><span class="card-tag">Level 2 Clearance</span><span class="card-tag">Night Drop</span></div>
+              </div>
+              <div class="card-action"><button class="btn btn-secondary" onclick="openDossierModal('midnight-mystery')">[ Add To Dispatch ]</button></div>
+            </div>
+          </article>
+          <article class="classified-card" data-id="OP_07G">
+            <div class="card-img-container"><img src="/assets/classified_case.jpg" alt="Decoy Guard Case"></div>
+            <div class="card-content">
+              <div>
+                <div class="card-meta"><span>STAGE: PLANNING</span><span class="card-price">$899.00</span></div>
+                <h3 class="card-title">VIP Decoy Guard</h3>
+                <p class="card-desc">Hire a mock security detail of four black-suited agents to shadow, protect, and build massive buzz around a friend in public.</p>
+                <div class="card-tags"><span class="card-tag">Level 4 Clearance</span><span class="card-tag">Escort Team</span></div>
+              </div>
+              <div class="card-action"><button class="btn btn-secondary" onclick="openDossierModal('vip-decoy')">[ Add To Dispatch ]</button></div>
+            </div>
+          </article>
+          <article class="classified-card" data-id="OP_08H">
+            <div class="card-img-container"><img src="/assets/classified_case.jpg" alt="Apology Case"></div>
+            <div class="card-content">
+              <div>
+                <div class="card-meta"><span>STAGE: STAGING</span><span class="card-price">$180.00</span></div>
+                <h3 class="card-title">Anonymous Apology</h3>
+                <p class="card-desc">Mend relations with absolute discretion. Delivery of high-end apology packages and tailored apology letters with zero traceable links.</p>
+                <div class="card-tags"><span class="card-tag">Level 1 Clearance</span><span class="card-tag">Bespoke Gift</span></div>
+              </div>
+              <div class="card-action"><button class="btn btn-secondary" onclick="openDossierModal('anonymous-apology')">[ Add To Dispatch ]</button></div>
+            </div>
+          </article>
+          <article class="classified-card" data-id="OP_09I">
+            <div class="card-img-container"><img src="/assets/classified_case.jpg" alt="Red Envelope Case"></div>
+            <div class="card-content">
+              <div>
+                <div class="card-meta"><span>STAGE: AUDIT</span><span class="card-price">$599.00</span></div>
+                <h3 class="card-title">Red Envelope</h3>
+                <p class="card-desc">The ultimate spy-themed puzzle. Target receives encrypted clues in red envelopes leading them through a curated urban adventure.</p>
+                <div class="card-tags"><span class="card-tag">Level 3 Clearance</span><span class="card-tag">Interactive</span></div>
+              </div>
+              <div class="card-action"><button class="btn btn-secondary" onclick="openDossierModal('red-envelope')">[ Add To Dispatch ]</button></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Overlay -->
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Dossier Detail</h2>
+        <button class="modal-close" aria-label="Close Modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-meta-grid">
+          <div class="modal-meta-item"><span>Operational Cost</span><p class="price">$0.00</p></div>
+          <div class="modal-meta-item"><span>Staging Period</span><p class="timeframe-val">Direct</p></div>
+          <div class="modal-meta-item"><span>Clearance Required</span><p class="clearance-val">Level 1</p></div>
+          <div class="modal-meta-item"><span>Operational Status</span><p style="color: var(--accent);">READY TO DEPLOY</p></div>
+        </div>
+        <p class="modal-desc">Loading parameters...</p>
+        <div class="modal-actions">
+          <button class="btn modal-confirm-btn">[ Initiate Comms ]</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-container">
+      <div><p>&copy; 2026 SECRET SERVICE AGENCY. ALL RIGHTS RESERVED.</p></div>
+      <div class="footer-sys-info">
+        <span>LOC // 33.9249&deg; S, 18.4241&deg; E</span>
+        <span>STATUS: <span class="footer-status">ONLINE</span></span>
+        <a href="contact.html" class="footer-link">TERMINAL</a>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

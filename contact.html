@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Encrypted Terminal // Secret Service</title>
+  <meta name="description" content="Access the secure dispatch terminal to configure operational dossiers and coordinates.">
+  <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+
+  <div class="custom-cursor"></div>
+  <div class="custom-cursor-dot"></div>
+
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span class="logo-icon">S</span> SECRET SERVICE <span class="logo-plaque">EST. 1952</span>
+      </a>
+      <button class="burger-menu" aria-label="Toggle Navigation">
+        <span class="burger-line"></span>
+        <span class="burger-line"></span>
+        <span class="burger-line"></span>
+      </button>
+      <ul class="nav-menu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="about.html" class="nav-link">The Directive</a></li>
+        <li><a href="dossiers.html" class="nav-link">Dossiers</a></li>
+        <li><a href="protocol.html" class="nav-link">Protocol</a></li>
+        <li><a href="contact.html" class="nav-link">Contact</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <section class="contact-hero">
+    <div class="section-container" style="width: 100%;">
+      <div class="section-header" style="margin-bottom: 3.5rem;">
+        <span class="section-subtitle">SECURE DISPATCH LINE</span>
+        <h1 class="hero-title" style="font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 0;">Initiate Comms</h1>
+      </div>
+
+      <div class="terminal-container">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot"></span>
+            <span class="terminal-dot"></span>
+          </div>
+          <div class="terminal-title">SECURE_TERMINAL_V.8.12 // SEC-SERV</div>
+          <div class="terminal-status">ONLINE</div>
+        </div>
+
+        <div class="terminal-screen">
+          <div class="terminal-log">
+            SS_COMMS_LINK SECURED // CLIENT_IP APPROVED // PORT 443 OPEN<br>
+            WARNING: DATA PACKETS ARE BASE64 SHIELDED. SENDER IP SCRUBBING AUTOMATED.<br>
+            CHOOSE OPERATION DOSSIER AND COORDINATES. AWAIT CONFIRMATION CODE.
+          </div>
+
+          <form id="terminal-dispatch-form" class="terminal-form">
+            <div class="form-group">
+              <label for="agent-identifier" class="form-label">Agent Identifier</label>
+              <input type="text" id="agent-identifier" class="form-input" placeholder="AGENT_GUEST_9999" required autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="target-dossier" class="form-label">Target Dossier Select</label>
+              <select id="target-dossier" class="form-input" required style="background-color: #000;">
+                <option value="" disabled selected>-- Select Classified Operation --</option>
+                <option value="secret-admirer">Secret Admirer ($149.00)</option>
+                <option value="soft-revenge">Soft Revenge ($299.00)</option>
+                <option value="confession">The Covert Confession ($199.00)</option>
+                <option value="roast-your-friend">Roast Your Friend ($249.00)</option>
+                <option value="office-prank-kit">Office Prank Kit ($450.00)</option>
+                <option value="midnight-mystery">Midnight Mystery ($349.00)</option>
+                <option value="vip-decoy">VIP Decoy Escort ($899.00)</option>
+                <option value="anonymous-apology">Anonymous Apology ($180.00)</option>
+                <option value="red-envelope">The Red Envelope ($599.00)</option>
+              </select>
+            </div>
+            <div class="form-group full-width">
+              <label for="delivery-coordinates" class="form-label">Delivery Coordinates</label>
+              <input type="text" id="delivery-coordinates" class="form-input" placeholder="e.g. 142 Buitengracht St, Cape Town, 8001 / Suite 4B" required autocomplete="off">
+            </div>
+            <div class="form-group full-width">
+              <label for="message-payload" class="form-label">Message Payload (Dispatch Content &amp; Instructions)</label>
+              <textarea id="message-payload" class="form-input" rows="5" placeholder="Specify recipient name, dispatch message details, and custom parameters..." required autocomplete="off"></textarea>
+            </div>
+            <div class="terminal-footer-actions">
+              <div class="terminal-command-log">AWAITING_INPUT<span>_</span></div>
+              <button type="submit" class="btn btn-glowing">[ Submit Order ]</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="hq-details">
+        <div>
+          <h3 class="hq-detail-title">PHYSICAL STATION HQ</h3>
+          <p class="hq-detail-text">Secret Service HQ Cape Town</p>
+          <p class="hq-detail-muted">Buitengracht Security Sector, Cape Town, South Africa</p>
+        </div>
+        <div>
+          <h3 class="hq-detail-title">SECURE COMMUNICATIONS</h3>
+          <p class="hq-detail-text">Secure Comms Routing: <span class="hq-accent">comms@secret-service.agency</span></p>
+          <p class="hq-detail-muted">PGP Key Certificate: FP83_09E2_AA31_FF82_9201</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-container">
+      <div><p>&copy; 2026 SECRET SERVICE AGENCY. ALL RIGHTS RESERVED.</p></div>
+      <div class="footer-sys-info">
+        <span>LOC // 33.9249&deg; S, 18.4241&deg; E</span>
+        <span>STATUS: <span class="footer-status">ONLINE</span></span>
+        <a href="contact.html" class="footer-link">TERMINAL</a>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
