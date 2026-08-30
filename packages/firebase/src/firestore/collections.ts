@@ -1,0 +1,1 @@
+export const FIRESTORE_COLLECTIONS = { operations:'operations', operationInternal:'operationInternal', customerOperations:'customerOperations', operationActivity:'operationActivity', payments:'payments' } as const;

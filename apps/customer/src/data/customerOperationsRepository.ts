@@ -8,4 +8,4 @@ const operations:readonly CustomerOperation[]=[
  {operationId:'SS-2479',createdAt:'2026-08-02T14:05:00Z',packageName:'Anonymous Apology',amount:299,status:'DELIVERED',paymentStatus:'PAID',recipient:{name:'Amogelang Radebe',campus:'University of the Free State',residence:'Roosmaryn'},delivery:{requestedDate:'2026-08-06',requestedWindow:'15:00–17:00',location:'Main gate',deliveredAt:'2026-08-06T16:11:00Z'},anonymousMessage:'I owe you a proper apology.'},
  {operationId:'SS-2440',createdAt:'2026-07-25T11:30:00Z',packageName:'Soft Revenge',amount:399,status:'CANCELLED',paymentStatus:'REFUNDED',recipient:{name:'Katlego Maseko',campus:'Central University of Technology',residence:'Graduation Centre'},delivery:{requestedDate:'2026-07-29',requestedWindow:'13:00–15:00',location:'Reception'},anonymousMessage:'A confidential reminder from an old friend.'},
 ];
-export const customerOperationsRepository={list:()=>operations,getById:(id:string)=>operations.find(item=>item.operationId===id)};
+export const customerOperationsRepository={list:():readonly CustomerOperation[]=>operations,getById:(id:string)=>operations.find(item=>item.operationId===id)};

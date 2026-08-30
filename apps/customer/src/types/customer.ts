@@ -1,3 +1,3 @@
 export type CustomerOperationStatus='PAYMENT_PENDING'|'PAID'|'REVIEW_REQUIRED'|'APPROVED'|'PREPARING'|'READY_FOR_DELIVERY'|'AMBASSADOR_ASSIGNED'|'OUT_FOR_DELIVERY'|'DELIVERED'|'COMPLETED'|'REJECTED'|'CANCELLED'|'DELIVERY_FAILED'|'REFUNDED';
-export interface CustomerOperation { operationId:string; createdAt:string; packageName:string; amount:number; paymentStatus:'PENDING'|'PAID'|'REFUNDED'; status:CustomerOperationStatus; recipient:{name:string;campus:string;residence:string}; delivery:{requestedDate:string;requestedWindow:string;location:string;deliveredAt?:string}; anonymousMessage:string }
-export interface CustomerProfile { firstName:string;lastName:string;email:string;phone:string;memberSince:string }
+export interface CustomerOperation{operationId:string;createdAt:string;packageName:string;amount:number;paymentStatus:'PENDING'|'PAID'|'REFUNDED';status:CustomerOperationStatus;recipient:{name:string;campus:string;residence:string};delivery:{requestedDate:string;requestedWindow:string;location:string;deliveredAt?:string};anonymousMessage:string}
+export interface CustomerProfile{firstName:string;lastName:string;email:string;phone:string;memberSince:string}
