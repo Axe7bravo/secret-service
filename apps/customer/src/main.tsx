@@ -1,4 +1,9 @@
-import { StrictMode } from 'react'; import { createRoot } from 'react-dom/client'; import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { APP_NAMES } from '@secret-service/config'; import { AppPlaceholder } from '@secret-service/ui';
-function App(){return <Routes><Route path="*" element={<AppPlaceholder eyebrow="CUSTOMER ACCESS" title={APP_NAMES.customer}>Foundation ready. Customer authentication and account features are intentionally reserved for a later milestone.</AppPlaceholder>}/></Routes>}
-createRoot(document.getElementById('root')!).render(<StrictMode><BrowserRouter><App/></BrowserRouter></StrictMode>);
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { App } from './App';
+import './styles/customer.css';
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode><BrowserRouter><App /></BrowserRouter></StrictMode>,
+);
