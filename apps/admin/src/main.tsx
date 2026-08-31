@@ -5,6 +5,7 @@ import { AdminAuthProvider } from './auth/AdminAuthProvider';
 import { App } from './App';
 import './styles/admin.css';
 import './styles/workflow.css';
+import './styles/homepage-theme.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

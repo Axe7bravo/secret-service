@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "secret-service-37f6b"
+  },
+  "targets": {
+    "secret-service-37f6b": {
+      "hosting": {
+        "admin": [
+          "secretserviceadmin"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
