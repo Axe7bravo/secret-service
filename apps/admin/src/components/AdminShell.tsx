@@ -5,9 +5,11 @@ import { useAdminAuth } from '../auth/adminAuthContext';
 const navigation = [
   { label: 'Dashboard', to: '/dashboard', icon: 'DB' },
   { label: 'Operations', to: '/operations', icon: 'OP' },
+  { label: 'Customers', to: '/customers', icon: 'CU' },
+  { label: 'Recipients', to: '/recipients', icon: 'RC' },
   { label: 'Packages', to: '/packages', icon: 'PK' },
 ] as const;
-const futureNavigation = ['Customers', 'Recipients', 'Deliveries', 'Ambassadors', 'Payments', 'Moderation', 'Campuses', 'Settings'];
+const futureNavigation = ['Deliveries', 'Ambassadors', 'Payments', 'Moderation', 'Campuses', 'Settings'];
 
 export function AdminShell() {
   const [menuOpen, setMenuOpen] = useState(false);
