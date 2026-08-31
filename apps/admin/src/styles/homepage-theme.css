@@ -172,6 +172,13 @@ h6,
 .operations-table tbody tr { transition: var(--admin-transition); }
 .operations-table tbody tr:hover { background: rgba(220, 38, 38, .05); }
 
+.status-review_required,
+.status-payment_pending {
+  color: #d47a7a;
+  background: rgba(153, 27, 27, .1);
+  border-color: #7a3838;
+}
+
 .filters input,
 .filters select,
 .action-dialog select,
