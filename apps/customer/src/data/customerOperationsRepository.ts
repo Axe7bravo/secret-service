@@ -1,11 +1,43 @@
+import type { CampusOperationPackage } from '@secret-service/config';
 import type { CustomerOperation } from '../types/customer';
-const operations:readonly CustomerOperation[]=[
- {operationId:'SS-2601',createdAt:'2026-08-30T08:15:00Z',packageName:'Soft Revenge',amount:399,status:'REVIEW_REQUIRED',paymentStatus:'PAID',recipient:{name:'Lerato Ndlovu',campus:'University of the Free State',residence:'Kovsie Residence'},delivery:{requestedDate:'2026-09-02',requestedWindow:'14:00–16:00',location:'Main reception'},anonymousMessage:'A harmless reminder that deadlines matter.'},
- {operationId:'SS-2589',createdAt:'2026-08-27T10:20:00Z',packageName:'Office Prank Kit',amount:549,status:'PREPARING',paymentStatus:'PAID',recipient:{name:'Jason Smith',campus:'Central University of Technology',residence:'Engineering Block'},delivery:{requestedDate:'2026-09-03',requestedWindow:'10:00–12:00',location:'Security desk'},anonymousMessage:'Congratulations on surviving another sprint.'},
- {operationId:'SS-2574',createdAt:'2026-08-24T09:45:00Z',packageName:'Anonymous Apology',amount:299,status:'AMBASSADOR_ASSIGNED',paymentStatus:'PAID',recipient:{name:'Kabelo Dube',campus:'University of the Free State',residence:'Akasia'},delivery:{requestedDate:'2026-09-01',requestedWindow:'16:00–18:00',location:'Residence entrance'},anonymousMessage:'I should have listened. I am sorry.'},
- {operationId:'SS-2558',createdAt:'2026-08-20T13:00:00Z',packageName:'Soft Revenge',amount:399,status:'OUT_FOR_DELIVERY',paymentStatus:'PAID',recipient:{name:'Sibusiso Khumalo',campus:'Central University of Technology',residence:'Admin Building'},delivery:{requestedDate:'2026-08-30',requestedWindow:'12:00–14:00',location:'Front desk'},anonymousMessage:'Your coffee debt has been formally escalated.'},
- {operationId:'SS-2511',createdAt:'2026-08-10T10:10:00Z',packageName:'Office Prank Kit',amount:549,status:'COMPLETED',paymentStatus:'PAID',recipient:{name:'Reuben Daniels',campus:'University of the Free State',residence:'Commerce Building'},delivery:{requestedDate:'2026-08-15',requestedWindow:'09:00–11:00',location:'Office 214',deliveredAt:'2026-08-15T09:42:00Z'},anonymousMessage:'The meeting could have been an email.'},
- {operationId:'SS-2479',createdAt:'2026-08-02T14:05:00Z',packageName:'Anonymous Apology',amount:299,status:'DELIVERED',paymentStatus:'PAID',recipient:{name:'Amogelang Radebe',campus:'University of the Free State',residence:'Roosmaryn'},delivery:{requestedDate:'2026-08-06',requestedWindow:'15:00–17:00',location:'Main gate',deliveredAt:'2026-08-06T16:11:00Z'},anonymousMessage:'I owe you a proper apology.'},
- {operationId:'SS-2440',createdAt:'2026-07-25T11:30:00Z',packageName:'Soft Revenge',amount:399,status:'CANCELLED',paymentStatus:'REFUNDED',recipient:{name:'Katlego Maseko',campus:'Central University of Technology',residence:'Graduation Centre'},delivery:{requestedDate:'2026-07-29',requestedWindow:'13:00–15:00',location:'Reception'},anonymousMessage:'A confidential reminder from an old friend.'},
+import type { CreateCustomerOperationInput, CreateCustomerOperationResult } from '../types/operationCreation';
+
+const operations: CustomerOperation[] = [
+  {operationId:'SS-2601',createdAt:'2026-08-30T08:15:00Z',packageName:'Soft Revenge',amount:399,status:'REVIEW_REQUIRED',paymentStatus:'PAID',recipient:{name:'Lerato Ndlovu',campus:'University of the Free State',residence:'Kovsie Residence'},delivery:{requestedDate:'2026-09-02',requestedWindow:'14:00–16:00',location:'Main reception'},anonymousMessage:'A harmless reminder that deadlines matter.'},
+  {operationId:'SS-2589',createdAt:'2026-08-27T10:20:00Z',packageName:'Office Prank Kit',amount:549,status:'PREPARING',paymentStatus:'PAID',recipient:{name:'Jason Smith',campus:'Central University of Technology',residence:'Engineering Block'},delivery:{requestedDate:'2026-09-03',requestedWindow:'10:00–12:00',location:'Security desk'},anonymousMessage:'Congratulations on surviving another sprint.'},
+  {operationId:'SS-2574',createdAt:'2026-08-24T09:45:00Z',packageName:'Anonymous Apology',amount:299,status:'AMBASSADOR_ASSIGNED',paymentStatus:'PAID',recipient:{name:'Kabelo Dube',campus:'University of the Free State',residence:'Akasia'},delivery:{requestedDate:'2026-09-01',requestedWindow:'16:00–18:00',location:'Residence entrance'},anonymousMessage:'I should have listened. I am sorry.'},
+  {operationId:'SS-2558',createdAt:'2026-08-20T13:00:00Z',packageName:'Soft Revenge',amount:399,status:'OUT_FOR_DELIVERY',paymentStatus:'PAID',recipient:{name:'Sibusiso Khumalo',campus:'Central University of Technology',residence:'Admin Building'},delivery:{requestedDate:'2026-08-30',requestedWindow:'12:00–14:00',location:'Front desk'},anonymousMessage:'Your coffee debt has been formally escalated.'},
+  {operationId:'SS-2511',createdAt:'2026-08-10T10:10:00Z',packageName:'Office Prank Kit',amount:549,status:'COMPLETED',paymentStatus:'PAID',recipient:{name:'Reuben Daniels',campus:'University of the Free State',residence:'Commerce Building'},delivery:{requestedDate:'2026-08-15',requestedWindow:'09:00–11:00',location:'Office 214',deliveredAt:'2026-08-15T09:42:00Z'},anonymousMessage:'The meeting could have been an email.'},
+  {operationId:'SS-2479',createdAt:'2026-08-02T14:05:00Z',packageName:'Anonymous Apology',amount:299,status:'DELIVERED',paymentStatus:'PAID',recipient:{name:'Amogelang Radebe',campus:'University of the Free State',residence:'Roosmaryn'},delivery:{requestedDate:'2026-08-06',requestedWindow:'15:00–17:00',location:'Main gate',deliveredAt:'2026-08-06T16:11:00Z'},anonymousMessage:'I owe you a proper apology.'},
+  {operationId:'SS-2440',createdAt:'2026-07-25T11:30:00Z',packageName:'Soft Revenge',amount:399,status:'CANCELLED',paymentStatus:'REFUNDED',recipient:{name:'Katlego Maseko',campus:'Central University of Technology',residence:'Graduation Centre'},delivery:{requestedDate:'2026-07-29',requestedWindow:'13:00–15:00',location:'Reception'},anonymousMessage:'A confidential reminder from an old friend.'},
 ];
-export const customerOperationsRepository={list:():readonly CustomerOperation[]=>operations,getById:(id:string)=>operations.find(item=>item.operationId===id)};
+
+let mockSequence = 1;
+
+export const customerOperationsRepository = {
+  list: (): readonly CustomerOperation[] => operations,
+  getById: (id: string): CustomerOperation | undefined => operations.find(item => item.operationId === id),
+  create(input: CreateCustomerOperationInput, selectedPackage: CampusOperationPackage): CreateCustomerOperationResult {
+    const operationId = `SS-MOCK-${String(mockSequence++).padStart(4, '0')}`;
+    operations.unshift({
+      operationId,
+      createdAt: new Date().toISOString(),
+      packageName: selectedPackage.name,
+      amount: selectedPackage.priceMinor / 100,
+      status: 'PAYMENT_PENDING',
+      paymentStatus: 'PENDING',
+      recipient: {
+        name: input.recipient.name.trim(),
+        campus: input.recipient.campus.trim(),
+        residence: input.recipient.residence.trim(),
+      },
+      delivery: {
+        requestedDate: input.delivery.requestedDate,
+        requestedWindow: input.delivery.requestedWindow.trim(),
+        location: input.recipient.deliveryLocation.trim(),
+      },
+      anonymousMessage: input.anonymousMessage.trim(),
+    });
+    return { operationId, status: 'PAYMENT_PENDING' };
+  },
+};

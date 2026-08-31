@@ -6,6 +6,7 @@ import { CustomerDashboardPage } from './pages/CustomerDashboardPage';
 import { CustomerOperationsPage } from './pages/CustomerOperationsPage';
 import { CustomerOperationDetailPage } from './pages/CustomerOperationDetailPage';
 import { CustomerAccountPage } from './pages/CustomerAccountPage';
+import { CustomerNewOperationPage } from './pages/CustomerNewOperationPage';
 import { CustomerShell } from './components/CustomerShell';
 
 export function App() {
@@ -17,6 +18,7 @@ export function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<CustomerDashboardPage />} />
         <Route path="operations" element={<CustomerOperationsPage />} />
+        <Route path="operations/new" element={<CustomerNewOperationPage />} />
         <Route path="operations/:operationId" element={<CustomerOperationDetailPage />} />
         <Route path="account" element={<CustomerAccountPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
