@@ -1,0 +1,240 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --admin-bg: #0a0a0a;
+  --admin-surface: #0d0d0d;
+  --admin-surface-raised: #0e0e0e;
+  --admin-surface-tertiary: #141414;
+  --admin-text: #ffffff;
+  --admin-text-secondary: #a3a3a3;
+  --admin-muted: #525252;
+  --admin-border: #262626;
+  --admin-accent: #dc2626;
+  --admin-accent-strong: #ef4444;
+  --admin-accent-dim: #991b1b;
+  --admin-accent-text: #dc2626;
+  --admin-on-accent: #ffffff;
+  --admin-border-glow: 0 0 10px rgba(220, 38, 38, .25);
+  --admin-transition: .2s ease;
+  --admin-font-header: 'Space Grotesk', sans-serif;
+  --admin-font-body: 'Inter', sans-serif;
+  --admin-font-mono: 'Space Mono', monospace;
+  color: var(--admin-text);
+  background: var(--admin-bg);
+  font-family: var(--admin-font-body);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--admin-font-body);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.brand {
+  font-family: var(--admin-font-header);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+}
+
+.eyebrow,
+.admin-layout nav,
+.topbar,
+.operations-table th,
+.status-badge,
+.filters label,
+.action-dialog label,
+.panel dt,
+.timeline time,
+.admin-login-status,
+.development-access {
+  font-family: var(--admin-font-mono);
+  text-transform: uppercase;
+}
+
+.admin-layout aside {
+  background: var(--admin-surface);
+  border-color: var(--admin-border);
+}
+
+.admin-layout nav a {
+  color: var(--admin-text-secondary);
+  transition: var(--admin-transition);
+}
+
+.admin-layout nav a:hover {
+  color: var(--admin-text);
+  background: var(--admin-surface-tertiary);
+}
+
+.admin-layout nav a.active {
+  color: var(--admin-text);
+  background: var(--admin-surface-tertiary);
+  border-color: var(--admin-accent);
+}
+
+.brand > b {
+  color: var(--admin-accent);
+  background: transparent;
+  border: 1px solid var(--admin-accent);
+  box-shadow: var(--admin-border-glow);
+}
+
+.profile { border-color: var(--admin-border); }
+.profile span,
+.metrics span,
+.operations-table th,
+.panel dt,
+.timeline time,
+.reset,
+.development-access { color: var(--admin-text-secondary); }
+
+.profile button,
+.actions button,
+.dialog-actions button {
+  border-color: var(--admin-border);
+  transition: var(--admin-transition);
+}
+
+.profile button:hover,
+.actions button:hover,
+.dialog-actions button:hover {
+  color: #fff;
+  background: var(--admin-accent);
+  border-color: var(--admin-accent);
+  box-shadow: var(--admin-border-glow);
+}
+
+.topbar {
+  background: rgba(10, 10, 10, .88);
+  border-color: var(--admin-border);
+  backdrop-filter: blur(12px);
+}
+
+.topbar span,
+.eyebrow,
+.admin-login-status { color: var(--admin-accent); }
+.eyebrow { letter-spacing: .25em; }
+.page h1 { font-family: var(--admin-font-header); }
+
+.primary-link,
+.primary,
+.actions .primary,
+.dialog-actions .primary,
+.admin-login-form button,
+.admin-auth-state button {
+  color: var(--admin-text);
+  background: transparent;
+  border: 1px solid var(--admin-accent);
+  box-shadow: var(--admin-border-glow);
+  font-family: var(--admin-font-mono);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  transition: var(--admin-transition);
+}
+
+.primary-link:hover,
+.primary:hover,
+.actions .primary:hover,
+.dialog-actions .primary:hover,
+.admin-login-form button:hover,
+.admin-auth-state button:hover {
+  color: #fff;
+  background: var(--admin-accent);
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 20px rgba(220, 38, 38, .4);
+}
+
+.metrics article,
+.panel,
+.command {
+  background: var(--admin-surface-raised);
+  border-color: var(--admin-border);
+  transition: var(--admin-transition);
+}
+
+.metrics article:hover,
+.panel:hover {
+  border-color: var(--admin-accent);
+  box-shadow: var(--admin-border-glow);
+}
+
+.operations-table th,
+.operations-table td { border-color: var(--admin-border); }
+.operations-table tbody tr { transition: var(--admin-transition); }
+.operations-table tbody tr:hover { background: rgba(220, 38, 38, .05); }
+
+.status-review_required,
+.status-payment_pending {
+  color: #d47a7a;
+  background: rgba(153, 27, 27, .1);
+  border-color: #7a3838;
+}
+
+.filters input,
+.filters select,
+.action-dialog select,
+.action-dialog textarea,
+.admin-login-form input {
+  color: var(--admin-text);
+  background: #000;
+  border-color: var(--admin-border);
+  transition: var(--admin-transition);
+}
+
+.filters input:focus-visible,
+.filters select:focus-visible,
+.action-dialog select:focus-visible,
+.action-dialog textarea:focus-visible,
+.admin-login-form input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 1px solid var(--admin-accent);
+  outline-offset: 2px;
+  border-color: var(--admin-accent);
+  box-shadow: var(--admin-border-glow);
+}
+
+.timeline li { border-color: var(--admin-border); }
+.timeline blockquote {
+  color: var(--admin-text-secondary);
+  border-color: var(--admin-accent);
+}
+
+.dialog-backdrop {
+  background: rgba(0, 0, 0, .85);
+  backdrop-filter: blur(8px);
+}
+
+.action-dialog {
+  background: var(--admin-surface-raised);
+  border-color: var(--admin-accent);
+  box-shadow: var(--admin-border-glow);
+}
+
+.admin-login-shell {
+  background: var(--admin-surface-raised);
+  border-color: var(--admin-border);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .75);
+}
+
+.development-access {
+  background: var(--admin-surface);
+  border-left: 2px solid var(--admin-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: .01ms !important;
+  }
+}

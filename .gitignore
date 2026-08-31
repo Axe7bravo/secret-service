@@ -5,6 +5,12 @@ dist
 .env.*.local
 apps/*/dist
 *.log
+<<<<<<< HEAD
 .agents
 .claude
 .firebase
+=======
+.agents/
+.claude/
+.firebase/
+>>>>>>> fix/admin-dashboard-design
