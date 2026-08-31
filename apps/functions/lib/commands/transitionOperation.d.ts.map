@@ -1,0 +1,1 @@
+{"version":3,"file":"transitionOperation.d.ts","sourceRoot":"","sources":["../../src/commands/transitionOperation.ts"],"names":[],"mappings":"AAKA,OAAO,EAAqB,KAAK,kBAAkB,EAAE,MAAM,gCAAgC,CAAC;AAC5F,OAAO,KAAK,EAA0C,eAAe,EAAE,MAAM,6BAA6B,CAAC;AAG3G,UAAU,eAAe;IAAG,WAAW,EAAC,MAAM,CAAC;IAAA,QAAQ,EAAC,eAAe,CAAC;IAAA,QAAQ,CAAC,EAAC,kBAAkB,CAAA;CAAE;AACtG,eAAO,MAAM,mBAAmB,uFA4B9B,CAAC"}

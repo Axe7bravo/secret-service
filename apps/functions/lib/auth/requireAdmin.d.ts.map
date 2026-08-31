@@ -1,0 +1,1 @@
+{"version":3,"file":"requireAdmin.d.ts","sourceRoot":"","sources":["../../src/auth/requireAdmin.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,6BAA6B,CAAC;AAGnE,eAAO,MAAM,YAAY,GAAI,SAAQ,eAAe,CAAC,OAAO,CAAC,KAAE;IAAC,GAAG,EAAC,MAAM,CAAA;CAIzE,CAAC"}
