@@ -1,2 +1,29 @@
-import { Link } from 'react-router-dom';import { OperationList } from '../components/OperationList';import { useOperations } from '../hooks/useOperations';import type { OperationStatus } from '../types/operations';
-export function DashboardPage(){const operations=useOperations();const count=(...statuses:OperationStatus[])=>operations.filter(item=>statuses.includes(item.operationStatus)).length;const action=operations.filter(item=>['NEW','REVIEW_REQUIRED','DELIVERY_FAILED'].includes(item.operationStatus));return <main className="page"><header className="page-header"><div><p className="eyebrow">COMMAND OVERVIEW</p><h1>Operations Dashboard</h1><p>Live view of the current session-persisted mock operation ledger.</p></div><Link className="primary-link" to="/operations">Open ledger</Link></header><section className="metrics"><article><span>New</span><strong>{count('NEW')}</strong></article><article><span>Review required</span><strong>{count('REVIEW_REQUIRED')}</strong></article><article><span>Preparing</span><strong>{count('PREPARING','READY_FOR_DELIVERY')}</strong></article><article><span>Out for delivery</span><strong>{count('OUT_FOR_DELIVERY')}</strong></article><article><span>Completed</span><strong>{count('COMPLETED')}</strong></article></section><section className="panel"><div className="section-heading"><div><p className="eyebrow">PRIORITY QUEUE</p><h2>Action Required</h2></div><span>{action.length} records</span></div><OperationList operations={action}/></section></main>}
+import { Link } from 'react-router-dom';
+import { OperationList } from '../components/OperationList';
+import { PageHeader } from '../components/PageHeader';
+import { SectionCard } from '../components/SectionCard';
+import { useOperations } from '../hooks/useOperations';
+import type { OperationStatus } from '../types/operations';
+
+export function DashboardPage() {
+  const operations = useOperations();
+  const count = (...statuses: OperationStatus[]) => operations.filter((item) => statuses.includes(item.operationStatus)).length;
+  const metrics = [['New Operations', count('NEW')], ['Awaiting Review', count('REVIEW_REQUIRED')], ['Preparing', count('PREPARING', 'READY_FOR_DELIVERY')], ['Out for Delivery', count('OUT_FOR_DELIVERY')], ['Completed', count('COMPLETED')]] as const;
+  const actionRequired = operations.filter((item) => ['NEW', 'REVIEW_REQUIRED', 'DELIVERY_FAILED'].includes(item.operationStatus));
+
+  return <main className="admin-main">
+    <PageHeader eyebrow="CONTROL OVERVIEW" title="Dashboard" description="Current operations and trusted workflow activity across the live administrative ledger." actions={<Link to="/operations">Open ledger</Link>} />
+    <section className="metric-grid" aria-label="Operational summary">{metrics.map(([label, value]) => <article className="metric-block" key={label}><span>{label}</span><strong>{String(value).padStart(2, '0')}</strong><small>ACTIVE LEDGER</small></article>)}</section>
+    <div className="dashboard-grid">
+      <SectionCard title="Recent Operations" eyebrow="LATEST ACTIVITY" className="dashboard-recent"><OperationList operations={operations.slice(0, 5)} compact /><Link className="section-link" to="/operations">View all operations <span aria-hidden="true">→</span></Link></SectionCard>
+      <SectionCard title="Action Required" eyebrow="OPERATOR ATTENTION" className="dashboard-actions"><ul className="attention-list">{actionRequired.map((operation) => <li key={operation.operationId}><div><strong>{operation.operationId}</strong><span>{attentionReason(operation.operationStatus, operation.requestedDeliveryWindow)}</span></div><Link to={`/operations/${operation.operationId}`} aria-label={`Review ${operation.operationId}`}>Review</Link></li>)}</ul></SectionCard>
+    </div>
+  </main>;
+}
+
+function attentionReason(status: string, deliveryWindow: string) {
+  if (status === 'DELIVERY_FAILED') return 'Delivery failed — review field notes';
+  if (status === 'REVIEW_REQUIRED') return 'Classified message awaits review';
+  if (deliveryWindow === 'Not supplied') return 'Missing requested delivery window';
+  return 'New operation requires triage';
+}
