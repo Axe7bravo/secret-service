@@ -1,8 +1,9 @@
 import type { Operation, OperationStatus } from '../types/operations';
 export interface TransitionContext { actor?:string; note?:string; ambassador?:string; reviewConfirmed?:boolean }
 export interface WorkflowAction { id:string; label:string; from:readonly OperationStatus[]; toStatus:OperationStatus; tone?:'primary'|'danger'; form?:'reason'|'ambassador'|'retry-review' }
-const cancellable:readonly OperationStatus[]=['NEW','PAYMENT_PENDING','PAID','REVIEW_REQUIRED','APPROVED','PREPARING','READY_FOR_DELIVERY','AMBASSADOR_ASSIGNED'];
+const cancellable:readonly OperationStatus[]=['NEW','PAYMENT_PENDING','PAID','REVIEW_REQUIRED','APPROVED','PREPARING','READY_FOR_DELIVERY','AMBASSADOR_ASSIGNED','DELIVERY_FAILED'];
 export const WORKFLOW_ACTIONS:readonly WorkflowAction[]=[
+ {id:'review',label:'Send to moderation',from:['PAID'],toStatus:'REVIEW_REQUIRED',tone:'primary'},
  {id:'approve',label:'Approve operation',from:['REVIEW_REQUIRED'],toStatus:'APPROVED',tone:'primary'},
  {id:'reject',label:'Reject operation',from:['REVIEW_REQUIRED'],toStatus:'REJECTED',tone:'danger',form:'reason'},
  {id:'prepare',label:'Start preparation',from:['APPROVED'],toStatus:'PREPARING',tone:'primary'},

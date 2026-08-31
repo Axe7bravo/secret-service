@@ -6,6 +6,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { OperationDetailPage } from './pages/OperationDetailPage';
 import { OperationsPage } from './pages/OperationsPage';
+import { PackagesPage } from './pages/PackagesPage';
 
 export function App() {
   return <Routes>
@@ -16,6 +17,7 @@ export function App() {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="operations" element={<OperationsPage />} />
         <Route path="operations/:operationId" element={<OperationDetailPage />} />
+        <Route path="packages" element={<PackagesPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Route>

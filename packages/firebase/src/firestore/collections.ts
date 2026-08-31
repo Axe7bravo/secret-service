@@ -1,1 +1,1 @@
-export const FIRESTORE_COLLECTIONS = { operations:'operations', operationInternal:'operationInternal', customerOperations:'customerOperations', operationActivity:'operationActivity', payments:'payments' } as const;
+export const FIRESTORE_COLLECTIONS = { operations:'operations', operationInternal:'operationInternal', customerOperations:'customerOperations', operationActivity:'operationActivity', packages:'packages', payments:'payments' } as const;

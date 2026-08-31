@@ -48,10 +48,11 @@ export const transitionOperation = onCall(async (request) => {
                 delete nextInternalDelivery.failureDetails;
             }
             const nextInternal = { ...internal, updatedAt: now, moderation: nextModeration, delivery: nextInternalDelivery, ...(toStatus === 'CANCELLED' ? { staffNotes: metadata.reason?.trim() } : {}) };
+            const activityNote = metadata.reason?.trim() ?? (toStatus === 'AMBASSADOR_ASSIGNED' && metadata.ambassadorId ? `Assigned ambassador: ${metadata.ambassadorId}` : operation.status === 'DELIVERY_FAILED' && toStatus === 'READY_FOR_DELIVERY' ? 'Delivery details reviewed for retry' : undefined);
             transaction.update(operationRef, operationUpdate);
             transaction.set(internalRef, nextInternal);
             transaction.set(projectionRef, buildCustomerOperationProjection(next));
-            transaction.create(activityRef, { operationId, type: 'STATUS_TRANSITION', timestamp: now, actorId: actor.uid, actorRole: 'ADMIN', fromStatus: operation.status, toStatus, reasonCode: metadata.reasonCode });
+            transaction.create(activityRef, { operationId, type: 'STATUS_TRANSITION', timestamp: now, actorId: actor.uid, actorRole: 'ADMIN', fromStatus: operation.status, toStatus, ...(metadata.reasonCode ? { reasonCode: metadata.reasonCode } : {}), ...(activityNote ? { note: activityNote } : {}) });
         });
         return { operationId, toStatus };
     }

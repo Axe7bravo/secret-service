@@ -19,10 +19,10 @@ export const parseOperationInternalDocument=(value:unknown):OperationInternalDoc
 };
 
 export const mapAdminOperation=(document:OperationDocument,internal?:OperationInternalDocument):Operation=>({
- operationId:document.operationId,createdAt:asDateString(document.createdAt,'createdAt'),packageType:document.package.nameSnapshot,customerName:'Firebase customer',email:'',phone:'',
+ operationId:document.operationId,customerId:document.customerId,createdAt:asDateString(document.createdAt,'createdAt'),packageType:document.package.nameSnapshot,customerName:'Firebase customer',email:'',phone:'',
  recipientName:document.recipient.name,recipientPhone:document.recipient.phone,campus:document.recipient.campus,residence:document.recipient.residence,deliveryLocation:document.recipient.deliveryLocation,deliveryNotes:document.recipient.deliveryInstructions??'',
  requestedDeliveryDate:document.delivery.requestedDate,requestedDeliveryWindow:document.delivery.requestedWindow,amount:document.paymentSummary.amountMinor/100,paymentStatus:document.paymentSummary.status,paymentReference:'Stored in payment boundary',paymentDate:document.paymentSummary.paidAt?asDateString(document.paymentSummary.paidAt,'paymentSummary.paidAt'):null,
  operationStatus:document.status,moderationStatus:internal?.moderation.status??'PENDING',ambassador:document.delivery.assignedAmbassadorId??null,anonymousMessage:document.anonymousMessage,
- rejectionReason:internal?.moderation.reasonNote,cancellationReason:undefined,deliveryFailureReason:internal?.delivery.failureDetails,
- activity:[{id:`firestore-${document.operationId}`,timestamp:asDateString(document.updatedAt,'updatedAt'),actor:'Firestore read model',toStatus:document.status,note:'Latest authoritative operation state.'}],
+ rejectionReason:internal?.moderation.reasonNote,cancellationReason:internal?.staffNotes,deliveryFailureReason:internal?.delivery.failureDetails,
+ activity:[],
 });

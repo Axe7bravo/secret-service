@@ -2,7 +2,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { requireAuthenticatedCustomer } from '../auth/requireAuthenticatedCustomer.js';
 import { getAdminFirestore } from '../firebaseAdmin.js';
-import type { OperationInternalRecord, OperationRecord } from '../domain/operationTypes.js';
+import type { OperationInternalRecord, OperationRecord, PackageRecord } from '../domain/operationTypes.js';
 import { buildCustomerOperationProjection } from '../projection/customerOperationProjection.js';
 import { asCallableError } from './commandErrors.js';
 
@@ -22,18 +22,6 @@ interface CreateOperationInput {
   };
   anonymousMessage: string;
 }
-
-interface ServerPackage {
-  packageId: string;
-  name: string;
-  priceMinor: number;
-}
-
-const packagesById: Readonly<Record<string, ServerPackage>> = {
-  'soft-revenge': { packageId: 'soft-revenge', name: 'Soft Revenge', priceMinor: 29900 },
-  'office-prank-kit': { packageId: 'office-prank-kit', name: 'Office Prank Kit', priceMinor: 45000 },
-  'anonymous-apology': { packageId: 'anonymous-apology', name: 'Anonymous Apology', priceMinor: 18000 },
-};
 
 const asRecord = (value: unknown, label: string): Record<string, unknown> => {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -90,68 +78,71 @@ export const createOperation = onCall<unknown>(async request => {
 
   try {
     const input = parseInput(request.data);
-    const selectedPackage = packagesById[input.packageId];
-    if (!selectedPackage) throw new HttpsError('invalid-argument', 'Unsupported package.');
-
     const db = getAdminFirestore();
+    const packageRef = db.collection('packages').doc(input.packageId);
     const operationRef = db.collection('operations').doc();
     const internalRef = db.collection('operationInternal').doc(operationRef.id);
     const projectionRef = db.collection('customerOperations').doc(operationRef.id);
     const activityRef = db.collection('operationActivity').doc();
-    const now = Timestamp.now();
-    const operation: OperationRecord = {
-      operationId: operationRef.id,
-      customerId: actor.uid,
-      status: 'PAYMENT_PENDING',
-      package: {
-        packageId: selectedPackage.packageId,
-        nameSnapshot: selectedPackage.name,
-        priceMinor: selectedPackage.priceMinor,
-        currency: 'ZAR',
-      },
-      recipient: {
-        name: input.recipient.name,
-        phone: input.recipient.phone,
-        campus: input.recipient.campus,
-        residence: input.recipient.residence,
-        deliveryLocation: input.recipient.deliveryLocation,
-        ...(input.recipient.deliveryInstructions
-          ? { deliveryInstructions: input.recipient.deliveryInstructions }
-          : {}),
-      },
-      delivery: {
-        requestedDate: input.delivery.requestedDate,
-        requestedWindow: input.delivery.requestedWindow,
-      },
-      anonymousMessage: input.anonymousMessage,
-      paymentSummary: {
-        status: 'PENDING',
-        amountMinor: selectedPackage.priceMinor,
-        currency: 'ZAR',
-      },
-      createdAt: now,
-      updatedAt: now,
-    };
-    const internal: OperationInternalRecord = {
-      operationId: operation.operationId,
-      moderation: { status: 'PENDING' },
-      delivery: { retryCount: 0 },
-      safetyFlags: [],
-      updatedAt: now,
-    };
-
-    await db.runTransaction(async transaction => {
-      transaction.create(operationRef, operation);
+    const operation = await db.runTransaction(async transaction => {
+      const packageSnapshot = await transaction.get(packageRef);
+      if (!packageSnapshot.exists) throw new HttpsError('invalid-argument', 'Selected package is unavailable.');
+      const selectedPackage = packageSnapshot.data() as PackageRecord;
+      if (selectedPackage.packageId !== input.packageId || typeof selectedPackage.name !== 'string' || !Number.isInteger(selectedPackage.priceMinor) || selectedPackage.priceMinor < 0 || selectedPackage.currency !== 'ZAR') throw new HttpsError('failed-precondition', 'Selected package record is invalid.');
+      if (!selectedPackage.active) throw new HttpsError('failed-precondition', 'Selected package is inactive.');
+      const now = Timestamp.now();
+      const nextOperation: OperationRecord = {
+        operationId: operationRef.id,
+        customerId: actor.uid,
+        status: 'PAYMENT_PENDING',
+        package: {
+          packageId: selectedPackage.packageId,
+          nameSnapshot: selectedPackage.name,
+          priceMinor: selectedPackage.priceMinor,
+          currency: selectedPackage.currency,
+        },
+        recipient: {
+          name: input.recipient.name,
+          phone: input.recipient.phone,
+          campus: input.recipient.campus,
+          residence: input.recipient.residence,
+          deliveryLocation: input.recipient.deliveryLocation,
+          ...(input.recipient.deliveryInstructions
+            ? { deliveryInstructions: input.recipient.deliveryInstructions }
+            : {}),
+        },
+        delivery: {
+          requestedDate: input.delivery.requestedDate,
+          requestedWindow: input.delivery.requestedWindow,
+        },
+        anonymousMessage: input.anonymousMessage,
+        paymentSummary: {
+          status: 'PENDING',
+          amountMinor: selectedPackage.priceMinor,
+          currency: selectedPackage.currency,
+        },
+        createdAt: now,
+        updatedAt: now,
+      };
+      const internal: OperationInternalRecord = {
+        operationId: nextOperation.operationId,
+        moderation: { status: 'PENDING' },
+        delivery: { retryCount: 0 },
+        safetyFlags: [],
+        updatedAt: now,
+      };
+      transaction.create(operationRef, nextOperation);
       transaction.create(internalRef, internal);
-      transaction.create(projectionRef, buildCustomerOperationProjection(operation));
+      transaction.create(projectionRef, buildCustomerOperationProjection(nextOperation));
       transaction.create(activityRef, {
-        operationId: operation.operationId,
+        operationId: nextOperation.operationId,
         type: 'OPERATION_CREATED',
         timestamp: now,
         actorId: actor.uid,
         actorRole: 'CUSTOMER',
-        toStatus: operation.status,
+        toStatus: nextOperation.status,
       });
+      return nextOperation;
     });
 
     return { operationId: operation.operationId, status: operation.status };

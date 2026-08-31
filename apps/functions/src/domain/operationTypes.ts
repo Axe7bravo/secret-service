@@ -19,3 +19,9 @@ export interface OperationInternalRecord {
   delivery:{retryCount:number;failureReasonCode?:string;failureDetails?:string;internalNotes?:string};
   safetyFlags:string[]; staffNotes?:string; updatedAt:Timestamp;
 }
+
+export interface PackageRecord {
+  packageId:string;code:string;name:string;shortDescription:string;description?:string;
+  priceMinor:number;currency:'ZAR';active:boolean;displayOrder:number;
+  createdAt:Timestamp;updatedAt:Timestamp;
+}
