@@ -5,3 +5,6 @@ dist
 .env.*.local
 apps/*/dist
 *.log
+.agents
+.claude
+.firebase
