@@ -25,3 +25,13 @@ export interface PackageRecord {
   priceMinor:number;currency:'ZAR';active:boolean;displayOrder:number;
   createdAt:Timestamp;updatedAt:Timestamp;
 }
+
+export interface AmbassadorRecord {
+  ambassadorId:string;displayName:string;phone?:string;email?:string;campusCodes:string[];
+  active:boolean;availability:'AVAILABLE'|'UNAVAILABLE';createdAt:Timestamp;updatedAt:Timestamp;
+}
+
+export interface CampusRecord {
+  campusId:string;code:string;name:string;city:string;active:boolean;serviceNotes?:string;
+  displayOrder:number;createdAt:Timestamp;updatedAt:Timestamp;
+}

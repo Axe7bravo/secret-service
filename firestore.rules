@@ -28,6 +28,14 @@ service cloud.firestore {
       allow read: if isAdmin() || (signedIn() && resource.data.active == true);
       allow write: if false;
     }
+    match /ambassadors/{ambassadorId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+    match /campuses/{campusId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
     match /{document=**} {
       allow read, write: if false;
     }

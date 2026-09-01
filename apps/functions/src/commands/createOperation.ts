@@ -80,16 +80,19 @@ export const createOperation = onCall<unknown>(async request => {
     const input = parseInput(request.data);
     const db = getAdminFirestore();
     const packageRef = db.collection('packages').doc(input.packageId);
+    const campusCode = input.recipient.campus.trim().toLocaleLowerCase('en-ZA').replace(/\s+/g, '-');
+    const campusRef = db.collection('campuses').doc(campusCode);
     const operationRef = db.collection('operations').doc();
     const internalRef = db.collection('operationInternal').doc(operationRef.id);
     const projectionRef = db.collection('customerOperations').doc(operationRef.id);
     const activityRef = db.collection('operationActivity').doc();
     const operation = await db.runTransaction(async transaction => {
-      const packageSnapshot = await transaction.get(packageRef);
+      const [packageSnapshot, campusSnapshot] = await Promise.all([transaction.get(packageRef), transaction.get(campusRef)]);
       if (!packageSnapshot.exists) throw new HttpsError('invalid-argument', 'Selected package is unavailable.');
       const selectedPackage = packageSnapshot.data() as PackageRecord;
       if (selectedPackage.packageId !== input.packageId || typeof selectedPackage.name !== 'string' || !Number.isInteger(selectedPackage.priceMinor) || selectedPackage.priceMinor < 0 || selectedPackage.currency !== 'ZAR') throw new HttpsError('failed-precondition', 'Selected package record is invalid.');
       if (!selectedPackage.active) throw new HttpsError('failed-precondition', 'Selected package is inactive.');
+      if (campusSnapshot.exists && campusSnapshot.data()?.active !== true) throw new HttpsError('failed-precondition', 'Selected campus is inactive.');
       const now = Timestamp.now();
       const nextOperation: OperationRecord = {
         operationId: operationRef.id,

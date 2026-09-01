@@ -7,9 +7,12 @@ const navigation = [
   { label: 'Operations', to: '/operations', icon: 'OP' },
   { label: 'Customers', to: '/customers', icon: 'CU' },
   { label: 'Recipients', to: '/recipients', icon: 'RC' },
+  { label: 'Deliveries', to: '/deliveries', icon: 'DL' },
+  { label: 'Ambassadors', to: '/ambassadors', icon: 'AM' },
   { label: 'Packages', to: '/packages', icon: 'PK' },
+  { label: 'Campuses', to: '/campuses', icon: 'CP' },
 ] as const;
-const futureNavigation = ['Deliveries', 'Ambassadors', 'Payments', 'Moderation', 'Campuses', 'Settings'];
+const futureNavigation = ['Payments', 'Moderation', 'Settings'];
 
 export function AdminShell() {
   const [menuOpen, setMenuOpen] = useState(false);

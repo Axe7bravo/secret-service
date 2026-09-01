@@ -11,6 +11,11 @@ import { CustomersPage } from './pages/CustomersPage';
 import { CustomerDetailPage } from './pages/CustomerDetailPage';
 import { RecipientsPage } from './pages/RecipientsPage';
 import { RecipientDetailPage } from './pages/RecipientDetailPage';
+import { DeliveriesPage } from './pages/DeliveriesPage';
+import { AmbassadorsPage } from './pages/AmbassadorsPage';
+import { AmbassadorDetailPage } from './pages/AmbassadorDetailPage';
+import { CampusesPage } from './pages/CampusesPage';
+import { CampusDetailPage } from './pages/CampusDetailPage';
 
 export function App() {
   return <Routes>
@@ -25,7 +30,13 @@ export function App() {
         <Route path="customers/:customerId" element={<CustomerDetailPage />} />
         <Route path="recipients" element={<RecipientsPage />} />
         <Route path="recipients/:recipientId" element={<RecipientDetailPage />} />
+        <Route path="deliveries" element={<DeliveriesPage />} />
+        <Route path="deliveries/:operationId" element={<OperationDetailPage />} />
+        <Route path="ambassadors" element={<AmbassadorsPage />} />
+        <Route path="ambassadors/:ambassadorId" element={<AmbassadorDetailPage />} />
         <Route path="packages" element={<PackagesPage />} />
+        <Route path="campuses" element={<CampusesPage />} />
+        <Route path="campuses/:campusId" element={<CampusDetailPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Route>

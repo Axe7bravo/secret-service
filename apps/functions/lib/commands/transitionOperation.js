@@ -24,6 +24,15 @@ export const transitionOperation = onCall(async (request) => {
             const operation = operationSnapshot.data();
             const internal = (internalSnapshot.exists ? internalSnapshot.data() : { operationId, moderation: { status: 'PENDING' }, delivery: { retryCount: 0 }, safetyFlags: [] });
             validateTransition(operation.status, toStatus, metadata);
+            if (toStatus === 'AMBASSADOR_ASSIGNED' && metadata.ambassadorId) {
+                const ambassadorSnapshot = await transaction.get(db.collection('ambassadors').doc(metadata.ambassadorId));
+                if (!ambassadorSnapshot.exists)
+                    throw new HttpsError('failed-precondition', 'Ambassador no longer exists.');
+                const ambassador = ambassadorSnapshot.data();
+                const campus = operation.recipient.campus.trim().toLocaleLowerCase('en-ZA').replace(/\s+/g, '-');
+                if (!ambassador.active || ambassador.availability !== 'AVAILABLE' || (ambassador.campusCodes.length > 0 && !ambassador.campusCodes.includes(campus)))
+                    throw new HttpsError('failed-precondition', 'Ambassador is not eligible for this operation.');
+            }
             const now = Timestamp.now();
             const nextDelivery = { ...operation.delivery };
             if (toStatus === 'AMBASSADOR_ASSIGNED')

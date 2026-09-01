@@ -8,8 +8,8 @@ import type { OperationStatus } from '../types/operations';
 export function DashboardPage() {
   const { data: operations, loading, error } = useOperationsState();
   const count = (...statuses: OperationStatus[]) => operations.filter((item) => statuses.includes(item.operationStatus)).length;
-  const metrics = [['New Operations', count('NEW')], ['Awaiting Review', count('REVIEW_REQUIRED')], ['Preparing', count('PREPARING', 'READY_FOR_DELIVERY')], ['Out for Delivery', count('OUT_FOR_DELIVERY')], ['Completed', count('COMPLETED')]] as const;
-  const actionRequired = operations.filter((item) => ['NEW', 'REVIEW_REQUIRED', 'DELIVERY_FAILED'].includes(item.operationStatus));
+  const metrics = [['New Operations', count('NEW')], ['Awaiting Review', count('REVIEW_REQUIRED')], ['Ready for Delivery', count('READY_FOR_DELIVERY')], ['Out for Delivery', count('OUT_FOR_DELIVERY')], ['Completed', count('COMPLETED')]] as const;
+  const actionRequired = operations.filter((item) => ['NEW', 'REVIEW_REQUIRED', 'READY_FOR_DELIVERY', 'DELIVERY_FAILED'].includes(item.operationStatus));
 
   return <main className="admin-main">
     <PageHeader eyebrow="CONTROL OVERVIEW" title="Dashboard" description="Current operations and trusted workflow activity across the live administrative ledger." actions={<Link to="/operations">Open ledger</Link>} />
@@ -24,6 +24,7 @@ export function DashboardPage() {
 
 function attentionReason(status: string, deliveryWindow: string) {
   if (status === 'DELIVERY_FAILED') return 'Delivery failed — review field notes';
+  if (status === 'READY_FOR_DELIVERY') return 'Ready for ambassador assignment';
   if (status === 'REVIEW_REQUIRED') return 'Classified message awaits review';
   if (deliveryWindow === 'Not supplied') return 'Missing requested delivery window';
   return 'New operation requires triage';
