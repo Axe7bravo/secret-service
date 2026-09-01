@@ -5,6 +5,7 @@ import { getAdminFirestore } from '../firebaseAdmin.js';
 import type { CampusRecord,OperationInternalRecord,OperationRecord,PackageRecord } from '../domain/operationTypes.js';
 import { buildCustomerOperationProjection } from '../projection/customerOperationProjection.js';
 import { asCallableError } from './commandErrors.js';
+import { operationalSettingsFrom,type OperationalSettingsRecord } from '../domain/operationalSettings.js';
 
 interface CreateOperationInput {
   packageId: string;
@@ -51,9 +52,10 @@ const validateRequestedDate=(value:string):void=>{
   if(!parts)throw new HttpsError('invalid-argument','Requested date is invalid.');
   const year=Number(parts[1]);const month=Number(parts[2]);const day=Number(parts[3]);const parsed=new Date(Date.UTC(year,month-1,day));
   if(parsed.getUTCFullYear()!==year||parsed.getUTCMonth()!==month-1||parsed.getUTCDate()!==day)throw new HttpsError('invalid-argument','Requested date is invalid.');
-  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-  if(value<today)throw new HttpsError('invalid-argument','Requested date cannot be in the past.');
 };
+const johannesburgToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const addDateOnlyDays=(value:string,days:number)=>{const year=Number(value.slice(0,4));const month=Number(value.slice(5,7));const day=Number(value.slice(8,10));const result=new Date(Date.UTC(year,month-1,day+days));return`${result.getUTCFullYear()}-${String(result.getUTCMonth()+1).padStart(2,'0')}-${String(result.getUTCDate()).padStart(2,'0')}`};
+const validateOperationalRequest=(input:CreateOperationInput,settings:OperationalSettingsRecord)=>{if(!settings.operationCreationEnabled)throw new HttpsError('failed-precondition',settings.availabilityMessage||'New operation creation is temporarily unavailable.');const today=johannesburgToday();const minimum=addDateOnlyDays(today,settings.minimumLeadTimeDays);const maximum=addDateOnlyDays(today,settings.maximumFutureDays);if(input.delivery.requestedDate<minimum)throw new HttpsError('failed-precondition',`Requested date must allow at least ${settings.minimumLeadTimeDays} day(s) lead time.`);if(input.delivery.requestedDate>maximum)throw new HttpsError('failed-precondition',`Requested date must be within ${settings.maximumFutureDays} days.`);if(!settings.deliveryWindows.includes(input.delivery.requestedWindow))throw new HttpsError('failed-precondition','Selected delivery window is no longer available.')};
 
 const parseInput = (value: unknown): CreateOperationInput => {
   const input = asRecord(value, 'Operation request');
@@ -89,12 +91,13 @@ export const createOperation = onCall<unknown>(async request => {
     const packageRef = db.collection('packages').doc(input.packageId);
     const campusCode = input.recipient.campus.trim().toLocaleLowerCase('en-ZA').replace(/\s+/g, '-');
     const campusRef = db.collection('campuses').doc(campusCode);
+    const settingsRef = db.collection('systemSettings').doc('operations');
     const operationRef = db.collection('operations').doc();
     const internalRef = db.collection('operationInternal').doc(operationRef.id);
     const projectionRef = db.collection('customerOperations').doc(operationRef.id);
     const activityRef = db.collection('operationActivity').doc();
     const operation = await db.runTransaction(async transaction => {
-      const [packageSnapshot, campusSnapshot] = await Promise.all([transaction.get(packageRef), transaction.get(campusRef)]);
+      const [packageSnapshot, campusSnapshot,settingsSnapshot] = await Promise.all([transaction.get(packageRef), transaction.get(campusRef),transaction.get(settingsRef)]);
       if (!packageSnapshot.exists) throw new HttpsError('invalid-argument', 'Selected package is unavailable.');
       const selectedPackage = packageSnapshot.data() as PackageRecord;
       if (selectedPackage.packageId !== input.packageId || typeof selectedPackage.name !== 'string' || !Number.isInteger(selectedPackage.priceMinor) || selectedPackage.priceMinor < 0 || selectedPackage.currency !== 'ZAR') throw new HttpsError('failed-precondition', 'Selected package record is invalid.');
@@ -103,6 +106,7 @@ export const createOperation = onCall<unknown>(async request => {
       if(!campusSnapshot.exists||!selectedCampusData)throw new HttpsError('invalid-argument','Selected campus is unavailable.');
       const selectedCampus=selectedCampusData as CampusRecord;
       if(selectedCampus.code!==campusCode||selectedCampus.active!==true)throw new HttpsError('failed-precondition','Selected campus is inactive or invalid.');
+      validateOperationalRequest(input,operationalSettingsFrom(settingsSnapshot.data()));
       const now = Timestamp.now();
       const nextOperation: OperationRecord = {
         operationId: operationRef.id,

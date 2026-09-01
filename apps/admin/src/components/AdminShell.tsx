@@ -12,8 +12,9 @@ const navigation = [
   { label: 'Packages', to: '/packages', icon: 'PK' },
   { label: 'Moderation', to: '/moderation', icon: 'MD' },
   { label: 'Campuses', to: '/campuses', icon: 'CP' },
+  { label: 'Settings', to: '/settings', icon: 'ST' },
 ] as const;
-const futureNavigation = ['Payments', 'Settings'];
+const futureNavigation = ['Payments'];
 
 export function AdminShell() {
   const [menuOpen, setMenuOpen] = useState(false);

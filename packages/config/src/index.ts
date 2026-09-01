@@ -13,3 +13,19 @@ export const CAMPUS_OPERATION_PACKAGES = [
 
 export type CampusOperationPackageId = typeof CAMPUS_OPERATION_PACKAGES[number]['id'];
 export type CampusOperationPackage = typeof CAMPUS_OPERATION_PACKAGES[number];
+
+export interface CustomerOperationalSettings {
+  operationCreationEnabled:boolean;
+  minimumLeadTimeDays:number;
+  maximumFutureDays:number;
+  deliveryWindows:readonly string[];
+  availabilityMessage:string;
+}
+
+export const DEFAULT_CUSTOMER_OPERATIONAL_SETTINGS:CustomerOperationalSettings={
+  operationCreationEnabled:true,
+  minimumLeadTimeDays:0,
+  maximumFutureDays:90,
+  deliveryWindows:['09:00–11:00','11:00–13:00','14:00–16:00','16:00–18:00'],
+  availabilityMessage:'',
+};

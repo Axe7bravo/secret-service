@@ -7,3 +7,5 @@ export { saveCampus } from './commands/saveCampus.js';
 export { assignAmbassador } from './commands/assignAmbassador.js';
 export { getCustomerCatalog } from './queries/getCustomerCatalog.js';
 export { setCustomerOperationArchived } from './commands/setCustomerOperationArchived.js';
+export { getAdminSettings } from './queries/getAdminSettings.js';
+export { saveAdminSettings } from './commands/saveAdminSettings.js';

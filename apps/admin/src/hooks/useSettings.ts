@@ -1,0 +1,4 @@
+import { useCallback,useEffect,useState } from 'react';
+import { adminSettingsRepository } from '../data/settingsRepository';
+import type { AdminOperationalSettings } from '../types/settings';
+export const useSettings=()=>{const [data,setData]=useState<AdminOperationalSettings|null>(null);const [loading,setLoading]=useState(true);const [error,setError]=useState('');const [revision,setRevision]=useState(0);const refresh=useCallback(()=>setRevision(value=>value+1),[]);useEffect(()=>{let active=true;setLoading(true);setError('');adminSettingsRepository.load().then(value=>{if(active)setData(value)}).catch(issue=>{if(active)setError(issue instanceof Error?issue.message:'Operational settings could not be loaded.')}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[revision]);return{data,loading,error,refresh}};

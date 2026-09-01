@@ -15,7 +15,7 @@ const friendlyCreationError=(error:unknown):Error=>{
   const code=typeof error==='object'&&error!==null&&'code'in error?String(error.code):'';
   if(code.includes('unauthenticated'))return new Error('Your secure session expired. Sign in and try again.');
   if(code.includes('invalid-argument'))return new Error('Review the operation details and correct any missing or invalid information.');
-  if(code.includes('failed-precondition'))return new Error('The selected package or campus is no longer available. Refresh the catalogue and try again.');
+  if(code.includes('failed-precondition'))return new Error('Operation availability or scheduling rules changed. Refresh the page and review your package, campus, date, and delivery window.');
   if(code.includes('unavailable')||code.includes('network'))return new Error('The secure operations service is temporarily unavailable. Try again shortly.');
   return new Error('The operation could not be submitted. Please try again.');
 };
