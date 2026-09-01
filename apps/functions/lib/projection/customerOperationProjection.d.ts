@@ -1,5 +1,12 @@
+import type { Timestamp } from 'firebase-admin/firestore';
 import type { OperationRecord } from '../domain/operationTypes.js';
-export declare const buildCustomerOperationProjection: (operation: OperationRecord) => {
+export interface CustomerArchiveMetadata {
+    archived: boolean;
+    archivedAt?: Timestamp;
+}
+export declare const customerArchiveMetadataFrom: (value: unknown) => CustomerArchiveMetadata;
+export declare const buildCustomerOperationProjection: (operation: OperationRecord, archive?: CustomerArchiveMetadata) => {
+    archivedAt?: Timestamp | undefined;
     operationId: string;
     customerId: string;
     package: {
@@ -14,7 +21,7 @@ export declare const buildCustomerOperationProjection: (operation: OperationReco
         residence: string;
     };
     delivery: {
-        deliveredAt?: FirebaseFirestore.Timestamp | undefined;
+        deliveredAt?: Timestamp | undefined;
         requestedDate: string;
         requestedWindow: string;
         location: string;
@@ -27,9 +34,10 @@ export declare const buildCustomerOperationProjection: (operation: OperationReco
     };
     tracking: {
         status: "PAYMENT_PENDING" | "PREPARING" | "DELIVERED" | "CANCELLED" | "REFUNDED" | "CONFIRMED" | "DELIVERY_SCHEDULED" | "IN_PROGRESS" | "COMPLETE" | "REQUIRES_ATTENTION" | "DELIVERY_ISSUE";
-        updatedAt: FirebaseFirestore.Timestamp;
+        updatedAt: Timestamp;
     };
-    createdAt: FirebaseFirestore.Timestamp;
-    updatedAt: FirebaseFirestore.Timestamp;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+    archived: boolean;
 };
 //# sourceMappingURL=customerOperationProjection.d.ts.map

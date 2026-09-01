@@ -6,7 +6,7 @@ export type CustomerStatus = 'PAYMENT_PENDING'|'CONFIRMED'|'PREPARING'|'DELIVERY
 export interface OperationRecord {
   operationId:string; customerId:string; status:OperationStatus;
   package:{packageId:string;nameSnapshot:string;priceMinor:number;currency:'ZAR'};
-  recipient:{name:string;phone:string;campus:string;residence:string;deliveryLocation:string;deliveryInstructions?:string};
+  recipient:{name:string;phone:string;campus:string;campusCode?:string;residence:string;deliveryLocation:string;deliveryInstructions?:string};
   delivery:{requestedDate:string;requestedWindow:string;assignedAmbassadorId?:string;deliveredAt?:Timestamp};
   anonymousMessage:string;
   paymentSummary:{status:'PENDING'|'PAID'|'REFUNDED'|'FAILED';amountMinor:number;currency:'ZAR';paidAt?:Timestamp};

@@ -5,3 +5,5 @@ export { getAdminDirectory } from './queries/getAdminDirectory.js';
 export { saveAmbassador } from './commands/saveAmbassador.js';
 export { saveCampus } from './commands/saveCampus.js';
 export { assignAmbassador } from './commands/assignAmbassador.js';
+export { getCustomerCatalog } from './queries/getCustomerCatalog.js';
+export { setCustomerOperationArchived } from './commands/setCustomerOperationArchived.js';

@@ -1,5 +1,11 @@
 import { customerStatusFor } from '../domain/operationWorkflow.js';
-export const buildCustomerOperationProjection = (operation) => ({
+export const customerArchiveMetadataFrom = (value) => {
+    if (typeof value !== 'object' || value === null)
+        return { archived: false };
+    const record = value;
+    return record.archived === true ? { archived: true, ...(record.archivedAt ? { archivedAt: record.archivedAt } : {}) } : { archived: false };
+};
+export const buildCustomerOperationProjection = (operation, archive = { archived: false }) => ({
     operationId: operation.operationId,
     customerId: operation.customerId,
     package: { name: operation.package.nameSnapshot, amountMinor: operation.package.priceMinor, currency: operation.package.currency },
@@ -11,4 +17,6 @@ export const buildCustomerOperationProjection = (operation) => ({
     tracking: { status: customerStatusFor(operation.status), updatedAt: operation.updatedAt },
     createdAt: operation.createdAt,
     updatedAt: operation.updatedAt,
+    archived: archive.archived,
+    ...(archive.archivedAt ? { archivedAt: archive.archivedAt } : {}),
 });

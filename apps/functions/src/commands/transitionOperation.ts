@@ -5,7 +5,7 @@ import { asCallableError } from './commandErrors.js';
 import { getAdminFirestore } from '../firebaseAdmin.js';
 import { validateTransition,type TransitionMetadata } from '../domain/operationWorkflow.js';
 import type { AmbassadorRecord,OperationInternalRecord,OperationRecord,OperationStatus } from '../domain/operationTypes.js';
-import { buildCustomerOperationProjection } from '../projection/customerOperationProjection.js';
+import { buildCustomerOperationProjection,customerArchiveMetadataFrom } from '../projection/customerOperationProjection.js';
 
 interface TransitionInput { operationId:string;toStatus:OperationStatus;metadata?:TransitionMetadata }
 export const transitionOperation=onCall<TransitionInput>(async request=>{
@@ -15,11 +15,11 @@ export const transitionOperation=onCall<TransitionInput>(async request=>{
     if(!operationId?.trim()||!toStatus)throw new HttpsError('invalid-argument','Operation ID and target status are required.');
     const db=getAdminFirestore();const operationRef=db.collection('operations').doc(operationId);const internalRef=db.collection('operationInternal').doc(operationId);const projectionRef=db.collection('customerOperations').doc(operationId);const activityRef=db.collection('operationActivity').doc();
     await db.runTransaction(async transaction=>{
-      const [operationSnapshot,internalSnapshot]=await Promise.all([transaction.get(operationRef),transaction.get(internalRef)]);
+      const [operationSnapshot,internalSnapshot,projectionSnapshot]=await Promise.all([transaction.get(operationRef),transaction.get(internalRef),transaction.get(projectionRef)]);
       if(!operationSnapshot.exists)throw new HttpsError('not-found','Operation not found.');
       const operation=operationSnapshot.data() as OperationRecord;const internal=(internalSnapshot.exists?internalSnapshot.data():{operationId,moderation:{status:'PENDING'},delivery:{retryCount:0},safetyFlags:[]}) as OperationInternalRecord;
       validateTransition(operation.status,toStatus,metadata);
-      if(toStatus==='AMBASSADOR_ASSIGNED'&&metadata.ambassadorId){const ambassadorSnapshot=await transaction.get(db.collection('ambassadors').doc(metadata.ambassadorId));if(!ambassadorSnapshot.exists)throw new HttpsError('failed-precondition','Ambassador no longer exists.');const ambassador=ambassadorSnapshot.data() as AmbassadorRecord;const campus=operation.recipient.campus.trim().toLocaleLowerCase('en-ZA').replace(/\s+/g,'-');if(!ambassador.active||ambassador.availability!=='AVAILABLE'||(ambassador.campusCodes.length>0&&!ambassador.campusCodes.includes(campus)))throw new HttpsError('failed-precondition','Ambassador is not eligible for this operation.');}
+      if(toStatus==='AMBASSADOR_ASSIGNED'&&metadata.ambassadorId){const ambassadorSnapshot=await transaction.get(db.collection('ambassadors').doc(metadata.ambassadorId));if(!ambassadorSnapshot.exists)throw new HttpsError('failed-precondition','Ambassador no longer exists.');const ambassador=ambassadorSnapshot.data() as AmbassadorRecord;const campus=operation.recipient.campusCode??operation.recipient.campus.trim().toLocaleLowerCase('en-ZA').replace(/\s+/g,'-');if(!ambassador.active||ambassador.availability!=='AVAILABLE'||(ambassador.campusCodes.length>0&&!ambassador.campusCodes.includes(campus)))throw new HttpsError('failed-precondition','Ambassador is not eligible for this operation.');}
       const now=Timestamp.now();
       const nextDelivery={...operation.delivery};
       if(toStatus==='AMBASSADOR_ASSIGNED')nextDelivery.assignedAmbassadorId=metadata.ambassadorId;
@@ -35,7 +35,7 @@ export const transitionOperation=onCall<TransitionInput>(async request=>{
       if(operation.status==='DELIVERY_FAILED'&&toStatus==='READY_FOR_DELIVERY'){nextInternalDelivery.retryCount+=1;delete nextInternalDelivery.failureReasonCode;delete nextInternalDelivery.failureDetails;}
       const nextInternal:OperationInternalRecord={...internal,updatedAt:now,moderation:nextModeration,delivery:nextInternalDelivery,...(toStatus==='CANCELLED'?{staffNotes:metadata.reason?.trim()}:{})};
       const activityNote=metadata.reason?.trim()??(toStatus==='AMBASSADOR_ASSIGNED'&&metadata.ambassadorId?`Assigned ambassador: ${metadata.ambassadorId}`:operation.status==='DELIVERY_FAILED'&&toStatus==='READY_FOR_DELIVERY'?'Delivery details reviewed for retry':undefined);
-      transaction.update(operationRef,operationUpdate);transaction.set(internalRef,nextInternal);transaction.set(projectionRef,buildCustomerOperationProjection(next));transaction.create(activityRef,{operationId,type:'STATUS_TRANSITION',timestamp:now,actorId:actor.uid,actorRole:'ADMIN',fromStatus:operation.status,toStatus,...(metadata.reasonCode?{reasonCode:metadata.reasonCode}:{}),...(activityNote?{note:activityNote}:{})});
+      transaction.update(operationRef,operationUpdate);transaction.set(internalRef,nextInternal);transaction.set(projectionRef,buildCustomerOperationProjection(next,customerArchiveMetadataFrom(projectionSnapshot.data())));transaction.create(activityRef,{operationId,type:'STATUS_TRANSITION',timestamp:now,actorId:actor.uid,actorRole:'ADMIN',fromStatus:operation.status,toStatus,...(metadata.reasonCode?{reasonCode:metadata.reasonCode}:{}),...(activityNote?{note:activityNote}:{})});
     });
     return {operationId,toStatus};
   }catch(error){throw asCallableError(error)}

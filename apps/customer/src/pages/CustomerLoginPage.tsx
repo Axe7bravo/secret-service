@@ -23,15 +23,15 @@ export function CustomerLoginPage() {
     finally { setSubmitting(false); }
   };
 
-  return <main className="customer-login-page"><section className="customer-login-card" aria-labelledby="customer-login-title">
-    <p className="eyebrow">CUSTOMER PORTAL</p><h1 id="customer-login-title">Welcome back</h1><p>Sign in to review and track your operations.</p>
+  return <main className="customer-login"><section aria-labelledby="customer-login-title">
+    <div className="login-brand"><span>S</span><div><strong>SECRET SERVICE</strong><small>PRIVATE CLIENT ACCESS</small></div></div><div className="login-classification"><span>CONFIDENTIAL FILES</span><span>CLIENT ACCESS ONLY</span></div><h1 id="customer-login-title">Access Your Operations</h1><p>Authenticate to review and track your active and completed operations.</p>
     <form className="customer-login-form" onSubmit={submit}>
       <div><label htmlFor="customer-email">Email</label><input id="customer-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" required autoFocus /></div>
       <div><label htmlFor="customer-password">Password</label><input id="customer-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required /></div>
-      {error && <p role="alert" className="customer-auth-error">{error}</p>}
-      <button type="submit" disabled={submitting || loading}>{submitting ? 'Signing in…' : 'Log in'}</button>
+      {error && <p role="alert" className="login-error">{error}</p>}
+      <button type="submit" disabled={submitting || loading}>{submitting ? 'Authenticating…' : 'Access Files'}</button>
     </form>
     <p>New to Secret Service? <Link to="/signup">Create an account</Link></p>
-    <aside className="customer-auth-notice"><strong>REAL AUTH · MOCK OPERATION DATA</strong><p>Your identity uses Firebase Authentication. Dashboard operation records remain mock data in this milestone.</p></aside>
+    <aside className="customer-auth-notice"><strong>SECURE CUSTOMER ACCESS</strong><p>Your identity and private portal session are protected by Firebase Authentication.</p></aside>
   </section></main>;
 }

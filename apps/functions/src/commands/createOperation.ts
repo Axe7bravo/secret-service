@@ -2,7 +2,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { requireAuthenticatedCustomer } from '../auth/requireAuthenticatedCustomer.js';
 import { getAdminFirestore } from '../firebaseAdmin.js';
-import type { OperationInternalRecord, OperationRecord, PackageRecord } from '../domain/operationTypes.js';
+import type { CampusRecord,OperationInternalRecord,OperationRecord,PackageRecord } from '../domain/operationTypes.js';
 import { buildCustomerOperationProjection } from '../projection/customerOperationProjection.js';
 import { asCallableError } from './commandErrors.js';
 
@@ -46,14 +46,21 @@ const optionalString = (value: unknown, label: string, maximumLength: number): s
   return requiredString(value, label, maximumLength);
 };
 
+const validateRequestedDate=(value:string):void=>{
+  const parts=/^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if(!parts)throw new HttpsError('invalid-argument','Requested date is invalid.');
+  const year=Number(parts[1]);const month=Number(parts[2]);const day=Number(parts[3]);const parsed=new Date(Date.UTC(year,month-1,day));
+  if(parsed.getUTCFullYear()!==year||parsed.getUTCMonth()!==month-1||parsed.getUTCDate()!==day)throw new HttpsError('invalid-argument','Requested date is invalid.');
+  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  if(value<today)throw new HttpsError('invalid-argument','Requested date cannot be in the past.');
+};
+
 const parseInput = (value: unknown): CreateOperationInput => {
   const input = asRecord(value, 'Operation request');
   const recipient = asRecord(input.recipient, 'Recipient');
   const delivery = asRecord(input.delivery, 'Delivery');
   const requestedDate = requiredString(delivery.requestedDate, 'Requested date', 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) {
-    throw new HttpsError('invalid-argument', 'Requested date is invalid.');
-  }
+  validateRequestedDate(requestedDate);
 
   return {
     packageId: requiredString(input.packageId, 'Package', 64),
@@ -92,7 +99,10 @@ export const createOperation = onCall<unknown>(async request => {
       const selectedPackage = packageSnapshot.data() as PackageRecord;
       if (selectedPackage.packageId !== input.packageId || typeof selectedPackage.name !== 'string' || !Number.isInteger(selectedPackage.priceMinor) || selectedPackage.priceMinor < 0 || selectedPackage.currency !== 'ZAR') throw new HttpsError('failed-precondition', 'Selected package record is invalid.');
       if (!selectedPackage.active) throw new HttpsError('failed-precondition', 'Selected package is inactive.');
-      if (campusSnapshot.exists && campusSnapshot.data()?.active !== true) throw new HttpsError('failed-precondition', 'Selected campus is inactive.');
+      const selectedCampusData=campusSnapshot.data();
+      if(!campusSnapshot.exists||!selectedCampusData)throw new HttpsError('invalid-argument','Selected campus is unavailable.');
+      const selectedCampus=selectedCampusData as CampusRecord;
+      if(selectedCampus.code!==campusCode||selectedCampus.active!==true)throw new HttpsError('failed-precondition','Selected campus is inactive or invalid.');
       const now = Timestamp.now();
       const nextOperation: OperationRecord = {
         operationId: operationRef.id,
@@ -107,7 +117,8 @@ export const createOperation = onCall<unknown>(async request => {
         recipient: {
           name: input.recipient.name,
           phone: input.recipient.phone,
-          campus: input.recipient.campus,
+          campus: selectedCampus.name,
+          campusCode:selectedCampus.code,
           residence: input.recipient.residence,
           deliveryLocation: input.recipient.deliveryLocation,
           ...(input.recipient.deliveryInstructions

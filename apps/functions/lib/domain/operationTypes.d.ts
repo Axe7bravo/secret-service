@@ -15,6 +15,7 @@ export interface OperationRecord {
         name: string;
         phone: string;
         campus: string;
+        campusCode?: string;
         residence: string;
         deliveryLocation: string;
         deliveryInstructions?: string;

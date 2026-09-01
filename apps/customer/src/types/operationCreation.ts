@@ -1,7 +1,5 @@
-import type { CampusOperationPackageId } from '@secret-service/config';
-
 export interface CreateCustomerOperationInput {
-  packageId: CampusOperationPackageId;
+  packageId: string;
   recipient: {
     name: string;
     phone: string;

@@ -4,7 +4,7 @@ import { requireAdmin } from '../auth/requireAdmin.js';
 import { asCallableError } from './commandErrors.js';
 import { getAdminFirestore } from '../firebaseAdmin.js';
 import { validateTransition } from '../domain/operationWorkflow.js';
-import { buildCustomerOperationProjection } from '../projection/customerOperationProjection.js';
+import { buildCustomerOperationProjection, customerArchiveMetadataFrom } from '../projection/customerOperationProjection.js';
 export const transitionOperation = onCall(async (request) => {
     const actor = requireAdmin(request);
     try {
@@ -18,7 +18,7 @@ export const transitionOperation = onCall(async (request) => {
         const projectionRef = db.collection('customerOperations').doc(operationId);
         const activityRef = db.collection('operationActivity').doc();
         await db.runTransaction(async (transaction) => {
-            const [operationSnapshot, internalSnapshot] = await Promise.all([transaction.get(operationRef), transaction.get(internalRef)]);
+            const [operationSnapshot, internalSnapshot, projectionSnapshot] = await Promise.all([transaction.get(operationRef), transaction.get(internalRef), transaction.get(projectionRef)]);
             if (!operationSnapshot.exists)
                 throw new HttpsError('not-found', 'Operation not found.');
             const operation = operationSnapshot.data();
@@ -29,7 +29,7 @@ export const transitionOperation = onCall(async (request) => {
                 if (!ambassadorSnapshot.exists)
                     throw new HttpsError('failed-precondition', 'Ambassador no longer exists.');
                 const ambassador = ambassadorSnapshot.data();
-                const campus = operation.recipient.campus.trim().toLocaleLowerCase('en-ZA').replace(/\s+/g, '-');
+                const campus = operation.recipient.campusCode ?? operation.recipient.campus.trim().toLocaleLowerCase('en-ZA').replace(/\s+/g, '-');
                 if (!ambassador.active || ambassador.availability !== 'AVAILABLE' || (ambassador.campusCodes.length > 0 && !ambassador.campusCodes.includes(campus)))
                     throw new HttpsError('failed-precondition', 'Ambassador is not eligible for this operation.');
             }
@@ -60,7 +60,7 @@ export const transitionOperation = onCall(async (request) => {
             const activityNote = metadata.reason?.trim() ?? (toStatus === 'AMBASSADOR_ASSIGNED' && metadata.ambassadorId ? `Assigned ambassador: ${metadata.ambassadorId}` : operation.status === 'DELIVERY_FAILED' && toStatus === 'READY_FOR_DELIVERY' ? 'Delivery details reviewed for retry' : undefined);
             transaction.update(operationRef, operationUpdate);
             transaction.set(internalRef, nextInternal);
-            transaction.set(projectionRef, buildCustomerOperationProjection(next));
+            transaction.set(projectionRef, buildCustomerOperationProjection(next, customerArchiveMetadataFrom(projectionSnapshot.data())));
             transaction.create(activityRef, { operationId, type: 'STATUS_TRANSITION', timestamp: now, actorId: actor.uid, actorRole: 'ADMIN', fromStatus: operation.status, toStatus, ...(metadata.reasonCode ? { reasonCode: metadata.reasonCode } : {}), ...(activityNote ? { note: activityNote } : {}) });
         });
         return { operationId, toStatus };

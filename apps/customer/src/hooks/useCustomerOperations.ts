@@ -19,22 +19,16 @@ export const useCustomerOperations = (): CustomerOperationsState => {
   const refresh = useCallback(() => setRevision(value => value + 1), []);
 
   useEffect(() => {
-    let active = true;
     if (!user) {
       setOperations([]);
       setLoading(false);
-      return () => { active = false; };
+      return undefined;
     }
 
     setLoading(true);
     setError(null);
     const repository = createCustomerOperationReadRepository(user.uid);
-    void repository.list()
-      .then(result => { if (active) setOperations(result); })
-      .catch(() => { if (active) setError('Your operation files could not be loaded. Please try again.'); })
-      .finally(() => { if (active) setLoading(false); });
-
-    return () => { active = false; };
+    return repository.subscribeList(result=>{setOperations(result);setLoading(false);setError(null)},()=>{setLoading(false);setError('Your operation files could not be loaded. Please try again.')});
   }, [user, revision]);
 
   return { operations, loading, error, refresh };

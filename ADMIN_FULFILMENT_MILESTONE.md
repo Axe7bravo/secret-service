@@ -26,7 +26,7 @@ Campus writes use `saveCampus`, which requires the trusted admin claim, validate
 
 Operations continue storing campus, residence, and delivery-location snapshots. Catalogue renames or deactivation therefore cannot rewrite historical operations. Campus Detail relates operations conservatively by stored campus code/name.
 
-Customer creation retains free-text campus compatibility. When a normalized campus code resolves to a catalogue record, the trusted creation transaction rejects it if inactive. Unknown legacy campus values remain accepted until the Customer Dashboard campus selector is implemented.
+Historical operations retain their free-text campus snapshots. New customer operations require an active catalogue campus; the trusted creation transaction resolves its stable code into the immutable campus-name snapshot.
 
 ## Customer projection and audit behavior
 
@@ -56,7 +56,7 @@ The existing metric presentation now separates Ready for Delivery from preparati
 - Availability is an administrator-maintained operational flag.
 - Current assignment counts derive from authoritative operation assignment state; full historical assignment lookup remains available through operation activity rather than a separate assignment ledger.
 - Campus matching uses normalized stored campus text because existing operations do not carry a stable campus ID snapshot.
-- Unknown legacy free-text campuses remain accepted during operation creation for compatibility.
+- Historical free-text campus snapshots remain readable, while new creation uses stable catalogue codes.
 - Delivery scheduling dates are read-only in Admin; no rescheduling command or editable date field currently exists.
 
 ## Deferred functionality
