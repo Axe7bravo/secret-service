@@ -111,7 +111,7 @@ export const createOperation = onCall<unknown>(async request => {
       const nextOperation: OperationRecord = {
         operationId: operationRef.id,
         customerId: actor.uid,
-        status: 'PAYMENT_PENDING',
+        status: 'REVIEW_REQUIRED',
         package: {
           packageId: selectedPackage.packageId,
           nameSnapshot: selectedPackage.name,
@@ -135,7 +135,7 @@ export const createOperation = onCall<unknown>(async request => {
         },
         anonymousMessage: input.anonymousMessage,
         paymentSummary: {
-          status: 'PENDING',
+          status: 'NOT_REQUIRED_YET',
           amountMinor: selectedPackage.priceMinor,
           currency: selectedPackage.currency,
         },

@@ -8,7 +8,7 @@ import type { OperationStatus } from '../types/operations';
 export function DashboardPage() {
   const { data: operations, loading, error } = useOperationsState();
   const count = (...statuses: OperationStatus[]) => operations.filter((item) => statuses.includes(item.operationStatus)).length;
-  const metrics = [['New Operations', count('NEW')], ['Awaiting Review', count('REVIEW_REQUIRED')], ['Ready for Delivery', count('READY_FOR_DELIVERY')], ['Out for Delivery', count('OUT_FOR_DELIVERY')], ['Completed', count('COMPLETED')]] as const;
+  const metrics = [['Awaiting Review', count('NEW','REVIEW_REQUIRED')], ['Awaiting Payment', count('APPROVED','PAYMENT_PENDING')], ['Ready for Fulfilment', count('PAID')], ['Out for Delivery', count('OUT_FOR_DELIVERY')], ['Completed', count('COMPLETED')]] as const;
   const actionRequired = operations.filter((item) => ['NEW', 'REVIEW_REQUIRED', 'READY_FOR_DELIVERY', 'DELIVERY_FAILED'].includes(item.operationStatus));
 
   return <main className="admin-main">

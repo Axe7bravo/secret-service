@@ -73,7 +73,7 @@ The existing Awaiting Review metric already counts `REVIEW_REQUIRED`, and Action
 ## Deferred behavior and limitations
 
 - `REJECTED` remains terminal; customer appeals, edits, and resubmission are unsupported.
-- Rejection does not refund or reverse payment. Refund behavior remains deferred to Payments.
+- Rejection occurs before payment becomes due, so it does not require refund or reversal behavior. Payments remain deferred.
 - No automated AI moderation, external safety API, policy CMS, notifications, email, or SMS was added.
 - Approved/rejected history reflects retained operations and internal moderation documents; no pagination was added at current MVP scale.
 

@@ -17,5 +17,5 @@ export interface CreateCustomerOperationInput {
 
 export interface CreateCustomerOperationResult {
   operationId: string;
-  status: 'PAYMENT_PENDING';
+  status: 'REVIEW_REQUIRED';
 }

@@ -15,5 +15,12 @@ export declare const getCustomerCatalog: import("firebase-functions/v2/https").C
         city: string;
         displayOrder: number;
     }[];
+    settings: {
+        operationCreationEnabled: boolean;
+        minimumLeadTimeDays: number;
+        maximumFutureDays: number;
+        deliveryWindows: string[];
+        availabilityMessage: string;
+    };
 }>, unknown>;
 //# sourceMappingURL=getCustomerCatalog.d.ts.map

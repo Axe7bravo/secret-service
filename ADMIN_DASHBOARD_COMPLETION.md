@@ -28,8 +28,8 @@ The interface disables workflow controls during submission and displays safe com
 
 ## Lifecycle behavior
 
-- Moderation: a paid operation can be sent to `REVIEW_REQUIRED`, then approved or rejected. Rejection requires a reason.
-- Preparation: `APPROVED → PREPARING → READY_FOR_DELIVERY` uses canonical domain actions.
+- Moderation: a newly submitted operation enters `REVIEW_REQUIRED`, then is approved or rejected. Rejection requires a reason. Approval records the decision and the trusted workflow advances it to `PAYMENT_PENDING`.
+- Preparation: only `PAID → PREPARING → READY_FOR_DELIVERY` uses canonical domain actions; approved-but-unpaid operations cannot enter fulfilment.
 - Assignment: an available ambassador reference is required for `AMBASSADOR_ASSIGNED`. The MVP source is mock-backed behind `ambassadorRepository`; no contact details are projected to customers.
 - Delivery: assignment, dispatch, delivery, and completion remain explicit validated actions.
 - Failure and retry: delivery failure requires a reason. Retry requires confirmation that delivery details were reviewed, clears the active assignment, increments retry count, and retains the prior reason in activity history.

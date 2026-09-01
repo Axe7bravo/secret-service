@@ -1,0 +1,23 @@
+import { HttpsError } from 'firebase-functions/v2/https';
+export const DEFAULT_OPERATIONAL_SETTINGS = { operationCreationEnabled: true, minimumLeadTimeDays: 0, maximumFutureDays: 90, deliveryWindows: ['09:00–11:00', '11:00–13:00', '14:00–16:00', '16:00–18:00'], availabilityMessage: '' };
+const integer = (value, label, min, max) => { if (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max)
+    throw new HttpsError('invalid-argument', `${label} must be a whole number between ${min} and ${max}.`); return value; };
+const message = (value) => { if (typeof value !== 'string')
+    throw new HttpsError('invalid-argument', 'Availability message must be text.'); const normalized = value.trim(); if (normalized.length > 280)
+    throw new HttpsError('invalid-argument', 'Availability message is too long.'); return normalized; };
+const windows = (value) => { if (!Array.isArray(value) || value.length < 1 || value.length > 12)
+    throw new HttpsError('invalid-argument', 'Provide between 1 and 12 delivery windows.'); const normalized = value.map(item => { if (typeof item !== 'string' || !item.trim() || item.trim().length > 80)
+    throw new HttpsError('invalid-argument', 'Each delivery window must be between 1 and 80 characters.'); return item.trim(); }); if (new Set(normalized).size !== normalized.length)
+    throw new HttpsError('invalid-argument', 'Delivery windows must be unique.'); return normalized; };
+export const parseOperationalSettingsInput = (value) => { if (typeof value !== 'object' || value === null || Array.isArray(value))
+    throw new HttpsError('invalid-argument', 'Operational settings are required.'); const input = value; if (typeof input.operationCreationEnabled !== 'boolean')
+    throw new HttpsError('invalid-argument', 'Operation creation availability is required.'); const minimumLeadTimeDays = integer(input.minimumLeadTimeDays, 'Minimum lead time', 0, 30); const maximumFutureDays = integer(input.maximumFutureDays, 'Maximum future horizon', 1, 365); if (maximumFutureDays <= minimumLeadTimeDays)
+    throw new HttpsError('invalid-argument', 'Maximum future horizon must be greater than minimum lead time.'); return { operationCreationEnabled: input.operationCreationEnabled, minimumLeadTimeDays, maximumFutureDays, deliveryWindows: windows(input.deliveryWindows), availabilityMessage: message(input.availabilityMessage) }; };
+export const operationalSettingsFrom = (value) => { if (typeof value !== 'object' || value === null)
+    return { ...DEFAULT_OPERATIONAL_SETTINGS, deliveryWindows: [...DEFAULT_OPERATIONAL_SETTINGS.deliveryWindows] }; const record = value; try {
+    return { ...parseOperationalSettingsInput(record), ...(record.updatedAt ? { updatedAt: record.updatedAt } : {}), ...(record.updatedBy ? { updatedBy: record.updatedBy } : {}) };
+}
+catch {
+    return { ...DEFAULT_OPERATIONAL_SETTINGS, deliveryWindows: [...DEFAULT_OPERATIONAL_SETTINGS.deliveryWindows] };
+} };
+export const customerSafeOperationalSettings = (settings) => ({ operationCreationEnabled: settings.operationCreationEnabled, minimumLeadTimeDays: settings.minimumLeadTimeDays, maximumFutureDays: settings.maximumFutureDays, deliveryWindows: settings.deliveryWindows, availabilityMessage: settings.availabilityMessage });

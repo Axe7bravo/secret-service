@@ -13,20 +13,23 @@ export const transitionOperation=onCall<TransitionInput>(async request=>{
   try{
     const {operationId,toStatus}=request.data;const metadata=request.data.metadata??{};
     if(!operationId?.trim()||!toStatus)throw new HttpsError('invalid-argument','Operation ID and target status are required.');
-    const db=getAdminFirestore();const operationRef=db.collection('operations').doc(operationId);const internalRef=db.collection('operationInternal').doc(operationId);const projectionRef=db.collection('customerOperations').doc(operationId);const activityRef=db.collection('operationActivity').doc();
+    const db=getAdminFirestore();const operationRef=db.collection('operations').doc(operationId);const internalRef=db.collection('operationInternal').doc(operationId);const projectionRef=db.collection('customerOperations').doc(operationId);const activityRef=db.collection('operationActivity').doc();const paymentRequiredActivityRef=db.collection('operationActivity').doc();
     await db.runTransaction(async transaction=>{
       const [operationSnapshot,internalSnapshot,projectionSnapshot]=await Promise.all([transaction.get(operationRef),transaction.get(internalRef),transaction.get(projectionRef)]);
       if(!operationSnapshot.exists)throw new HttpsError('not-found','Operation not found.');
       const operation=operationSnapshot.data() as OperationRecord;const internal=(internalSnapshot.exists?internalSnapshot.data():{operationId,moderation:{status:'PENDING'},delivery:{retryCount:0},safetyFlags:[]}) as OperationInternalRecord;
       validateTransition(operation.status,toStatus,metadata);
+      if(toStatus==='APPROVED')validateTransition('APPROVED','PAYMENT_PENDING',{});
       if(toStatus==='AMBASSADOR_ASSIGNED'&&metadata.ambassadorId){const ambassadorSnapshot=await transaction.get(db.collection('ambassadors').doc(metadata.ambassadorId));if(!ambassadorSnapshot.exists)throw new HttpsError('failed-precondition','Ambassador no longer exists.');const ambassador=ambassadorSnapshot.data() as AmbassadorRecord;const campus=operation.recipient.campusCode??operation.recipient.campus.trim().toLocaleLowerCase('en-ZA').replace(/\s+/g,'-');if(!ambassador.active||ambassador.availability!=='AVAILABLE'||(ambassador.campusCodes.length>0&&!ambassador.campusCodes.includes(campus)))throw new HttpsError('failed-precondition','Ambassador is not eligible for this operation.');}
       const now=Timestamp.now();
       const nextDelivery={...operation.delivery};
       if(toStatus==='AMBASSADOR_ASSIGNED')nextDelivery.assignedAmbassadorId=metadata.ambassadorId;
       if(toStatus==='DELIVERED')nextDelivery.deliveredAt=now;
       if(operation.status==='DELIVERY_FAILED'&&toStatus==='READY_FOR_DELIVERY')delete nextDelivery.assignedAmbassadorId;
-      const next:OperationRecord={...operation,status:toStatus,updatedAt:now,delivery:nextDelivery};
-      const operationUpdate={status:toStatus,updatedAt:now,delivery:nextDelivery};
+      const finalStatus:OperationStatus=toStatus==='APPROVED'?'PAYMENT_PENDING':toStatus;
+      const nextPaymentSummary=toStatus==='APPROVED'?{...operation.paymentSummary,status:'PENDING' as const}:operation.paymentSummary;
+      const next:OperationRecord={...operation,status:finalStatus,updatedAt:now,delivery:nextDelivery,paymentSummary:nextPaymentSummary};
+      const operationUpdate={status:finalStatus,updatedAt:now,delivery:nextDelivery,paymentSummary:nextPaymentSummary};
       const nextModeration={...internal.moderation};
       if(toStatus==='APPROVED')Object.assign(nextModeration,{status:'APPROVED' as const,reviewedBy:actor.uid,reviewedAt:now});
       if(toStatus==='REJECTED')Object.assign(nextModeration,{status:'REJECTED' as const,reviewedBy:actor.uid,reviewedAt:now,reasonNote:metadata.reason?.trim()},metadata.reasonCode?{reasonCode:metadata.reasonCode}:{});
@@ -36,7 +39,8 @@ export const transitionOperation=onCall<TransitionInput>(async request=>{
       const nextInternal:OperationInternalRecord={...internal,updatedAt:now,moderation:nextModeration,delivery:nextInternalDelivery,...(toStatus==='CANCELLED'?{staffNotes:metadata.reason?.trim()}:{})};
       const activityNote=metadata.reason?.trim()??(toStatus==='AMBASSADOR_ASSIGNED'&&metadata.ambassadorId?`Assigned ambassador: ${metadata.ambassadorId}`:operation.status==='DELIVERY_FAILED'&&toStatus==='READY_FOR_DELIVERY'?'Delivery details reviewed for retry':undefined);
       transaction.update(operationRef,operationUpdate);transaction.set(internalRef,nextInternal);transaction.set(projectionRef,buildCustomerOperationProjection(next,customerArchiveMetadataFrom(projectionSnapshot.data())));transaction.create(activityRef,{operationId,type:'STATUS_TRANSITION',timestamp:now,actorId:actor.uid,actorRole:'ADMIN',fromStatus:operation.status,toStatus,...(metadata.reasonCode?{reasonCode:metadata.reasonCode}:{}),...(activityNote?{note:activityNote}:{})});
+      if(toStatus==='APPROVED')transaction.create(paymentRequiredActivityRef,{operationId,type:'STATUS_TRANSITION',timestamp:Timestamp.fromMillis(now.toMillis()+1),actorId:'trusted-workflow',actorRole:'SYSTEM',fromStatus:'APPROVED',toStatus:'PAYMENT_PENDING',note:'Moderation approved; payment is now required.'});
     });
-    return {operationId,toStatus};
+    return {operationId,toStatus:toStatus==='APPROVED'?'PAYMENT_PENDING':toStatus};
   }catch(error){throw asCallableError(error)}
 });

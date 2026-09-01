@@ -57,10 +57,12 @@ The public checkout/payment-authoritative creation path remains deferred; this c
 This admin-only callable reads the current authoritative and internal records inside the transaction, validates an explicit edge, and rejects stale/repeated actions. Supported edges are:
 
 - `NEW -> PAYMENT_PENDING`
-- `PAYMENT_PENDING -> PAID`
-- `PAID -> REVIEW_REQUIRED | REFUNDED | CANCELLED`
+- `NEW -> REVIEW_REQUIRED`
 - `REVIEW_REQUIRED -> APPROVED | REJECTED | CANCELLED`
-- `APPROVED -> PREPARING | CANCELLED`
+- `APPROVED -> PAYMENT_PENDING | CANCELLED`
+- `PAYMENT_PENDING -> PAID | CANCELLED`
+- `PAID -> PREPARING | REFUNDED | CANCELLED`
+- `REVIEW_REQUIRED -> APPROVED | REJECTED | CANCELLED`
 - `PREPARING -> READY_FOR_DELIVERY | CANCELLED`
 - `READY_FOR_DELIVERY -> AMBASSADOR_ASSIGNED | CANCELLED`
 - `AMBASSADOR_ASSIGNED -> OUT_FOR_DELIVERY | CANCELLED`

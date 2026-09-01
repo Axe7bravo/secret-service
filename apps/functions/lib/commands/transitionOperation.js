@@ -17,6 +17,7 @@ export const transitionOperation = onCall(async (request) => {
         const internalRef = db.collection('operationInternal').doc(operationId);
         const projectionRef = db.collection('customerOperations').doc(operationId);
         const activityRef = db.collection('operationActivity').doc();
+        const paymentRequiredActivityRef = db.collection('operationActivity').doc();
         await db.runTransaction(async (transaction) => {
             const [operationSnapshot, internalSnapshot, projectionSnapshot] = await Promise.all([transaction.get(operationRef), transaction.get(internalRef), transaction.get(projectionRef)]);
             if (!operationSnapshot.exists)
@@ -24,6 +25,8 @@ export const transitionOperation = onCall(async (request) => {
             const operation = operationSnapshot.data();
             const internal = (internalSnapshot.exists ? internalSnapshot.data() : { operationId, moderation: { status: 'PENDING' }, delivery: { retryCount: 0 }, safetyFlags: [] });
             validateTransition(operation.status, toStatus, metadata);
+            if (toStatus === 'APPROVED')
+                validateTransition('APPROVED', 'PAYMENT_PENDING', {});
             if (toStatus === 'AMBASSADOR_ASSIGNED' && metadata.ambassadorId) {
                 const ambassadorSnapshot = await transaction.get(db.collection('ambassadors').doc(metadata.ambassadorId));
                 if (!ambassadorSnapshot.exists)
@@ -41,8 +44,10 @@ export const transitionOperation = onCall(async (request) => {
                 nextDelivery.deliveredAt = now;
             if (operation.status === 'DELIVERY_FAILED' && toStatus === 'READY_FOR_DELIVERY')
                 delete nextDelivery.assignedAmbassadorId;
-            const next = { ...operation, status: toStatus, updatedAt: now, delivery: nextDelivery };
-            const operationUpdate = { status: toStatus, updatedAt: now, delivery: nextDelivery };
+            const finalStatus = toStatus === 'APPROVED' ? 'PAYMENT_PENDING' : toStatus;
+            const nextPaymentSummary = toStatus === 'APPROVED' ? { ...operation.paymentSummary, status: 'PENDING' } : operation.paymentSummary;
+            const next = { ...operation, status: finalStatus, updatedAt: now, delivery: nextDelivery, paymentSummary: nextPaymentSummary };
+            const operationUpdate = { status: finalStatus, updatedAt: now, delivery: nextDelivery, paymentSummary: nextPaymentSummary };
             const nextModeration = { ...internal.moderation };
             if (toStatus === 'APPROVED')
                 Object.assign(nextModeration, { status: 'APPROVED', reviewedBy: actor.uid, reviewedAt: now });
@@ -62,8 +67,10 @@ export const transitionOperation = onCall(async (request) => {
             transaction.set(internalRef, nextInternal);
             transaction.set(projectionRef, buildCustomerOperationProjection(next, customerArchiveMetadataFrom(projectionSnapshot.data())));
             transaction.create(activityRef, { operationId, type: 'STATUS_TRANSITION', timestamp: now, actorId: actor.uid, actorRole: 'ADMIN', fromStatus: operation.status, toStatus, ...(metadata.reasonCode ? { reasonCode: metadata.reasonCode } : {}), ...(activityNote ? { note: activityNote } : {}) });
+            if (toStatus === 'APPROVED')
+                transaction.create(paymentRequiredActivityRef, { operationId, type: 'STATUS_TRANSITION', timestamp: Timestamp.fromMillis(now.toMillis() + 1), actorId: 'trusted-workflow', actorRole: 'SYSTEM', fromStatus: 'APPROVED', toStatus: 'PAYMENT_PENDING', note: 'Moderation approved; payment is now required.' });
         });
-        return { operationId, toStatus };
+        return { operationId, toStatus: toStatus === 'APPROVED' ? 'PAYMENT_PENDING' : toStatus };
     }
     catch (error) {
         throw asCallableError(error);

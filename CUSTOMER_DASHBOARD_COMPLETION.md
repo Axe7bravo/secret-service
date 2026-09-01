@@ -20,7 +20,9 @@ Operation Detail displays only projection fields: operation reference, package s
 
 The single customer presentation map translates projection states into:
 
-- Payment Pending
+- Under Review
+- Approved
+- Payment Required
 - Confirmed
 - Preparing Your Operation
 - Delivery Scheduled
@@ -32,7 +34,7 @@ The single customer presentation map translates projection states into:
 - Delivery Issue
 - Refunded
 
-Successful states use the progression Confirmed → Preparing → Delivery Scheduled → In Progress → Delivered → Operation Complete. Payment Pending and side/terminal exception states render separately rather than pretending to advance through the successful path. Progress contains no hardcoded percentages.
+Successful states use the progression Under Review → Approved → Payment Required → Confirmed → Preparing → Delivery Scheduled → In Progress → Delivered → Operation Complete. Side and terminal exception states render separately rather than pretending to advance through the successful path. Progress contains no hardcoded percentages.
 
 Admin workflow changes rebuild `customerOperations` in the trusted transaction. The realtime repository then updates dashboard, list, and detail views.
 
