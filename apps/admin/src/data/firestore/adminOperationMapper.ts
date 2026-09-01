@@ -24,5 +24,6 @@ export const mapAdminOperation=(document:OperationDocument,internal?:OperationIn
  requestedDeliveryDate:document.delivery.requestedDate,requestedDeliveryWindow:document.delivery.requestedWindow,amount:document.paymentSummary.amountMinor/100,paymentStatus:document.paymentSummary.status,paymentReference:'Stored in payment boundary',paymentDate:document.paymentSummary.paidAt?asDateString(document.paymentSummary.paidAt,'paymentSummary.paidAt'):null,
  operationStatus:document.status,moderationStatus:internal?.moderation.status??'PENDING',ambassador:document.delivery.assignedAmbassadorId??null,anonymousMessage:document.anonymousMessage,
  rejectionReason:internal?.moderation.reasonNote,cancellationReason:internal?.staffNotes,deliveryFailureReason:internal?.delivery.failureDetails,
+ moderationReviewedBy:internal?.moderation.reviewedBy,moderationReviewedAt:internal?.moderation.reviewedAt?asDateString(internal.moderation.reviewedAt,'moderation.reviewedAt'):undefined,
  activity:[],
 });

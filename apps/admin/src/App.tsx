@@ -16,6 +16,7 @@ import { AmbassadorsPage } from './pages/AmbassadorsPage';
 import { AmbassadorDetailPage } from './pages/AmbassadorDetailPage';
 import { CampusesPage } from './pages/CampusesPage';
 import { CampusDetailPage } from './pages/CampusDetailPage';
+import { ModerationPage } from './pages/ModerationPage';
 
 export function App() {
   return <Routes>
@@ -35,6 +36,8 @@ export function App() {
         <Route path="ambassadors" element={<AmbassadorsPage />} />
         <Route path="ambassadors/:ambassadorId" element={<AmbassadorDetailPage />} />
         <Route path="packages" element={<PackagesPage />} />
+        <Route path="moderation" element={<ModerationPage />} />
+        <Route path="moderation/:operationId" element={<OperationDetailPage />} />
         <Route path="campuses" element={<CampusesPage />} />
         <Route path="campuses/:campusId" element={<CampusDetailPage />} />
         <Route path="*" element={<NotFoundPage />} />

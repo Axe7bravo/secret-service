@@ -10,9 +10,10 @@ const navigation = [
   { label: 'Deliveries', to: '/deliveries', icon: 'DL' },
   { label: 'Ambassadors', to: '/ambassadors', icon: 'AM' },
   { label: 'Packages', to: '/packages', icon: 'PK' },
+  { label: 'Moderation', to: '/moderation', icon: 'MD' },
   { label: 'Campuses', to: '/campuses', icon: 'CP' },
 ] as const;
-const futureNavigation = ['Payments', 'Moderation', 'Settings'];
+const futureNavigation = ['Payments', 'Settings'];
 
 export function AdminShell() {
   const [menuOpen, setMenuOpen] = useState(false);

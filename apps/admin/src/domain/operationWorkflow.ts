@@ -24,7 +24,8 @@ export function transitionOperation(operation:Operation,toStatus:OperationStatus
  if(action.form==='reason'&&!note) throw new Error('A reason is required.');
  if(action.form==='ambassador'&&!context.ambassador) throw new Error('Select an ambassador.');
  if(action.form==='retry-review'&&!context.reviewConfirmed) throw new Error('Confirm delivery details were reviewed.');
- return {...operation,operationStatus:toStatus,moderationStatus:toStatus==='APPROVED'?'APPROVED':toStatus==='REJECTED'?'REJECTED':operation.moderationStatus,
+ const reviewed=toStatus==='APPROVED'||toStatus==='REJECTED';
+ return {...operation,operationStatus:toStatus,moderationStatus:toStatus==='APPROVED'?'APPROVED':toStatus==='REJECTED'?'REJECTED':operation.moderationStatus,moderationReviewedBy:reviewed?(context.actor??'Admin User'):operation.moderationReviewedBy,moderationReviewedAt:reviewed?new Date().toISOString():operation.moderationReviewedAt,
   ambassador:toStatus==='AMBASSADOR_ASSIGNED'?context.ambassador??null:operation.operationStatus==='DELIVERY_FAILED'&&toStatus==='READY_FOR_DELIVERY'?null:operation.ambassador,
   rejectionReason:toStatus==='REJECTED'?note:operation.rejectionReason,cancellationReason:toStatus==='CANCELLED'?note:operation.cancellationReason,deliveryFailureReason:toStatus==='DELIVERY_FAILED'?note:operation.deliveryFailureReason,
   activity:[...operation.activity,{id:`activity-${Date.now()}-${Math.random()}`,timestamp:new Date().toISOString(),actor:context.actor??'Admin User',fromStatus:operation.operationStatus,toStatus,note:note??(context.ambassador?`Assigned to ${context.ambassador}`:undefined)}]};
