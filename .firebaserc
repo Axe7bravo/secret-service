@@ -1,6 +1,7 @@
 {
   "projects": {
-    "default": "secret-service-37f6b"
+    "default": "secret-service-37f6b",
+    "ssproject": "secret-service-37f6b"
   },
   "targets": {
     "secret-service-37f6b": {

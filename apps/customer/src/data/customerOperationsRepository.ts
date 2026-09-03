@@ -48,4 +48,5 @@ export const customerOperationsRepository = {
     return { operationId, status: 'REVIEW_REQUIRED' };
   },
   setArchived(operationId:string,archived:boolean){const operation=operations.find(item=>item.operationId===operationId);if(!operation)throw new Error('Operation not found.');operation.archived=archived;operation.archivedAt=archived?new Date().toISOString():undefined;emit();return{operationId,archived}},
+  confirmMockPayment(operationId:string){const operation=operations.find(item=>item.operationId===operationId);if(!operation)throw new Error('Operation not found.');if(operation.status!=='PAYMENT_PENDING'||operation.paymentStatus!=='PENDING')throw new Error('Operation is not eligible for payment.');operation.status='PAID';operation.paymentStatus='PAID';operation.updatedAt=new Date().toISOString();emit()},
 };

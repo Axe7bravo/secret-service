@@ -9,4 +9,5 @@ export { getCustomerCatalog } from './queries/getCustomerCatalog.js';
 export { setCustomerOperationArchived } from './commands/setCustomerOperationArchived.js';
 export { getAdminSettings } from './queries/getAdminSettings.js';
 export { saveAdminSettings } from './commands/saveAdminSettings.js';
+export { createOperationPayment } from './commands/createOperationPayment.js';
 //# sourceMappingURL=index.d.ts.map

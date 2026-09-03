@@ -18,6 +18,8 @@ import { CampusesPage } from './pages/CampusesPage';
 import { CampusDetailPage } from './pages/CampusDetailPage';
 import { ModerationPage } from './pages/ModerationPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { PaymentsPage } from './pages/PaymentsPage';
+import { PaymentDetailPage } from './pages/PaymentDetailPage';
 
 export function App() {
   return <Routes>
@@ -40,6 +42,8 @@ export function App() {
         <Route path="moderation" element={<ModerationPage />} />
         <Route path="moderation/:operationId" element={<OperationDetailPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="payments" element={<PaymentsPage />} />
+        <Route path="payments/:paymentId" element={<PaymentDetailPage />} />
         <Route path="campuses" element={<CampusesPage />} />
         <Route path="campuses/:campusId" element={<CampusDetailPage />} />
         <Route path="*" element={<NotFoundPage />} />

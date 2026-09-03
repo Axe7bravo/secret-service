@@ -1,0 +1,12 @@
+import { collection,onSnapshot,orderBy,query,type Unsubscribe } from 'firebase/firestore';
+import { FIRESTORE_COLLECTIONS,getFirebaseFirestore,type PaymentDocument } from '../../../../packages/firebase/src';
+import { adminDataMode } from './adminReadRepository';
+import type { AdminPayment } from '../types/payments';
+
+interface PaymentRepository {subscribe(listener:(payments:readonly AdminPayment[])=>void,onError:(error:Error)=>void):Unsubscribe}
+const timestamp=(value:unknown)=>{const item=value as {toDate?:()=>Date};return typeof item?.toDate==='function'?item.toDate().toISOString():new Date(0).toISOString()};
+const mapPayment=(value:PaymentDocument):AdminPayment=>({paymentId:value.paymentId,operationId:value.operationId,customerId:value.customerId,provider:value.provider,amountMinor:value.amountMinor,currency:value.currency,status:value.status,...(value.providerPaymentId?{providerPaymentId:value.providerPaymentId}:{}),...(value.providerCheckoutId?{providerCheckoutId:value.providerCheckoutId}:{}),...(value.failureCategory?{failureCategory:value.failureCategory}:{}),createdAt:timestamp(value.createdAt),updatedAt:timestamp(value.updatedAt),...(value.paidAt?{paidAt:timestamp(value.paidAt)}:{}),...(value.failedAt?{failedAt:timestamp(value.failedAt)}:{}),...(value.refundedAt?{refundedAt:timestamp(value.refundedAt)}:{})});
+const mock:readonly AdminPayment[]=[{paymentId:'mock-ss-2606',operationId:'SS-2606',customerId:'mock-customer',provider:'YOCO',amountMinor:29900,currency:'ZAR',status:'PENDING',createdAt:'2026-08-30T14:05:00Z',updatedAt:'2026-08-30T14:05:00Z'},{paymentId:'mock-ss-2602',operationId:'SS-2602',customerId:'mock-customer-2',provider:'YOCO',amountMinor:54900,currency:'ZAR',status:'PAID',providerPaymentId:'mock-provider-reference',createdAt:'2026-08-29T11:20:00Z',updatedAt:'2026-08-29T11:24:00Z',paidAt:'2026-08-29T11:24:00Z'}];
+const mockRepository:PaymentRepository={subscribe(listener){listener(mock);return()=>undefined}};
+const firestoreRepository:PaymentRepository={subscribe(listener,onError){return onSnapshot(query(collection(getFirebaseFirestore(),FIRESTORE_COLLECTIONS.payments),orderBy('createdAt','desc')),snapshot=>{try{listener(snapshot.docs.map(item=>mapPayment(item.data() as PaymentDocument)))}catch(error){onError(error instanceof Error?error:new Error('Payments could not be loaded.'))}},error=>onError(error))}};
+export const paymentRepository=adminDataMode==='firestore'?firestoreRepository:mockRepository;

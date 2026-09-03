@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useCustomerAuth } from '../auth/customerAuthContext';
+import { customerDataMode } from '../data/customerReadRepository';
 
 const navigation = [
   { to: '/dashboard', label: 'Dashboard', end: false },
@@ -27,6 +28,6 @@ export function CustomerShell() {
       <nav aria-label="Customer navigation"><p>YOUR FILES</p><ul>{navigation.map(item => <li key={item.to}><NavLink to={item.to} end={item.end} className={({ isActive }) => isActive ? 'is-active' : ''}>{item.label}</NavLink></li>)}</ul><p className="future-label">FUTURE ACCESS</p><ul><li><span aria-disabled="true">Messages <small>Later</small></span></li><li><span aria-disabled="true">Support <small>Later</small></span></li></ul></nav>
       <div className="client-identity"><div>{initials}</div><p><strong>{displayName}</strong><span>Private Client</span></p><button type="button" onClick={() => void logout()}>Sign out</button></div>
     </aside>
-    <div className="client-workspace"><header className="client-topbar"><button type="button" className="client-menu" aria-label="Open navigation" aria-expanded={open} onClick={() => setOpen(true)}><span /><span /><span /></button><div><span>PRIVATE ACCESS</span><strong>Client Operations</strong></div><p><span /> SESSION ACTIVE</p></header><Outlet /></div>
+    <div className="client-workspace"><header className="client-topbar"><button type="button" className="client-menu" aria-label="Open navigation" aria-expanded={open} onClick={() => setOpen(true)}><span /><span /><span /></button><div><span>PRIVATE ACCESS</span><strong>Client Operations</strong></div><p><span /> {customerDataMode==='firestore'?'FIREBASE DATA':'MOCK DATA'}</p></header><Outlet /></div>
   </div>;
 }

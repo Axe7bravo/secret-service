@@ -1,0 +1,2 @@
+export type AdminPaymentStatus='PENDING'|'PAID'|'FAILED'|'CANCELLED'|'REFUNDED';
+export interface AdminPayment {paymentId:string;operationId:string;customerId:string;provider:'YOCO';amountMinor:number;currency:'ZAR';status:AdminPaymentStatus;providerPaymentId?:string;providerCheckoutId?:string;failureCategory?:string;createdAt:string;updatedAt:string;paidAt?:string;failedAt?:string;refundedAt?:string}

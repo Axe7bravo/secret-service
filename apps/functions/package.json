@@ -5,6 +5,9 @@
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "engines": {
+    "node": "22"
+  },
   "scripts": {
     "build": "tsc -b --pretty false",
     "typecheck": "tsc -b --pretty false --noEmit",

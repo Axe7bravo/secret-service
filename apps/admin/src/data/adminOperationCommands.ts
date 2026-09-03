@@ -3,6 +3,7 @@ import { getFirebaseFunctions } from '../../../../packages/firebase/src';
 import type { TransitionContext } from '../domain/operationWorkflow';
 import type { OperationStatus } from '../types/operations';
 import { adminOperationsRepository } from './adminOperationsRepository';
+import { adminDataMode } from './adminReadRepository';
 
 export interface AdminOperationCommands { transitionOperation(operationId:string,toStatus:OperationStatus,context?:TransitionContext):Promise<void> }
 
@@ -12,6 +13,5 @@ const firebaseCommands:AdminOperationCommands={
  async transitionOperation(operationId,toStatus,context={}){try{await httpsCallable(getFirebaseFunctions(),'transitionOperation')({operationId,toStatus,metadata:{reason:context.note,ambassadorId:context.ambassador,reviewConfirmed:context.reviewConfirmed}})}catch(error){throw safeCommandError(error)}},
 };
 const mockCommands:AdminOperationCommands={async transitionOperation(operationId,toStatus,context){adminOperationsRepository.transition(operationId,toStatus,context)}};
-const env=(import.meta as ImportMeta&{env:Record<string,string|undefined>}).env;
-export const adminWriteMode=env.VITE_OPERATION_WRITE_MODE==='firebase'?'firebase':'mock';
+export const adminWriteMode=adminDataMode==='firestore'?'firebase':'mock';
 export const adminOperationCommands:AdminOperationCommands=adminWriteMode==='firebase'?firebaseCommands:mockCommands;

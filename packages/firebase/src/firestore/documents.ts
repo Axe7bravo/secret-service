@@ -8,3 +8,5 @@ export interface OperationActivityDocument { operationId:string;type:string;time
 export interface PackageDocument { packageId:string;code:string;name:string;shortDescription:string;description?:string;priceMinor:number;currency:'ZAR';active:boolean;displayOrder:number;createdAt:Timestamp;updatedAt:Timestamp }
 export interface AmbassadorDocument { ambassadorId:string;displayName:string;phone?:string;email?:string;campusCodes:string[];active:boolean;availability:'AVAILABLE'|'UNAVAILABLE';createdAt:Timestamp;updatedAt:Timestamp }
 export interface CampusDocument { campusId:string;code:string;name:string;city:string;active:boolean;serviceNotes?:string;displayOrder:number;createdAt:Timestamp;updatedAt:Timestamp }
+export type PaymentStatus='PENDING'|'PAID'|'FAILED'|'CANCELLED'|'REFUNDED';
+export interface PaymentDocument {paymentId:string;operationId:string;customerId:string;provider:'YOCO';amountMinor:number;currency:'ZAR';status:PaymentStatus;providerPaymentId?:string;providerCheckoutId?:string;checkoutUrl?:string;failureCategory?:string;createdAt:Timestamp;updatedAt:Timestamp;paidAt?:Timestamp;failedAt?:Timestamp;refundedAt?:Timestamp}

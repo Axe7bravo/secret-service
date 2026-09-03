@@ -5,4 +5,4 @@ export { getFirebaseFirestore } from './firestoreClient';
 export { getFirebaseFunctions } from './functionsClient';
 export { FIRESTORE_COLLECTIONS } from './firestore/collections';
 export type { AuthClaims,AuthRole,AuthSession,AuthUser,SignUpInput } from './types';
-export type { AmbassadorDocument,CampusDocument,CustomerOperationDocument,CustomerProjectionStatus,InternalOperationStatus,OperationActivityDocument,OperationDocument,OperationInternalDocument,PackageDocument } from './firestore/documents';
+export type { AmbassadorDocument,CampusDocument,CustomerOperationDocument,CustomerProjectionStatus,InternalOperationStatus,OperationActivityDocument,OperationDocument,OperationInternalDocument,PackageDocument,PaymentDocument,PaymentStatus } from './firestore/documents';

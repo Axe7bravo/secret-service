@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { CustomerStatusBadge } from '../components/CustomerStatusBadge';
 import { TrackingTimeline } from '../components/TrackingTimeline';
@@ -7,16 +8,19 @@ import { CustomerArchiveControl } from '../components/CustomerArchiveControl';
 import { useCustomerOperation } from '../hooks/useCustomerOperations';
 import { getCustomerStatus,isArchiveEligible } from '../utils/status';
 import type { CustomerPaymentStatus } from '../types/customer';
+import { customerPaymentCommands } from '../data/customerPaymentCommands';
 
 export function CustomerOperationDetailPage() {
   const { operationId } = useParams();
   const location = useLocation();
   const operationCreated = Boolean((location.state as { operationCreated?: boolean } | null)?.operationCreated);
   const { operation, loading, error, refresh } = useCustomerOperation(operationId);
+  const [paymentBusy,setPaymentBusy]=useState(false);const [paymentError,setPaymentError]=useState('');
   if (loading) return <main className="client-main customer-empty" aria-live="polite">Retrieving operation file…</main>;
   if (error) return <main className="client-main"><div className="customer-load-error" role="alert"><p>{error}</p><button type="button" onClick={refresh}>Try again</button></div></main>;
   if (!operation) return <main className="client-main"><CustomerPageHeader eyebrow="PRIVATE OPERATION FILE" title="File Not Found" description="This operation is not available in your private files." /><Link className="client-button-link" to="/operations">Return to My Operations</Link></main>;
   const view = getCustomerStatus(operation.status);
+  const pay=async()=>{if(paymentBusy)return;setPaymentBusy(true);setPaymentError('');try{const result=await customerPaymentCommands.create(operation.operationId);if(result.checkoutUrl){window.location.assign(result.checkoutUrl)}}catch(issue){setPaymentError(issue instanceof Error?issue.message:'Payment could not be started.')}finally{setPaymentBusy(false)}};
 
   return <main className="client-main operation-detail">
     <Link className="client-back-link" to="/operations">← My Operations</Link>
@@ -30,7 +34,7 @@ export function CustomerOperationDetailPage() {
       <CustomerSection title="Package" eyebrow="OPERATION TYPE"><dl className="client-detail-list"><div><dt>Package</dt><dd>{operation.packageName}</dd></div><div><dt>Amount</dt><dd>R {operation.amount.toFixed(2)}</dd></div></dl></CustomerSection>
       <CustomerSection title="Your Message" eyebrow="SEALED CONTENT" className="customer-message"><blockquote>{operation.anonymousMessage}</blockquote><p>This message is held as a read-only part of your operation file.</p></CustomerSection>
       <CustomerSection title="Delivery" eyebrow="CUSTOMER-SAFE TRACKING"><dl className="client-detail-list"><div><dt>Requested date</dt><dd>{operation.delivery.requestedDate}</dd></div><div><dt>Time window</dt><dd>{operation.delivery.requestedWindow}</dd></div>{operation.updatedAt&&<div><dt>Last updated</dt><dd>{new Date(operation.updatedAt).toLocaleString('en-ZA')}</dd></div>}{operation.delivery.deliveredAt&&<div><dt>Delivered</dt><dd>{new Date(operation.delivery.deliveredAt).toLocaleString('en-ZA')}</dd></div>}</dl></CustomerSection>
-      <CustomerSection title="Payment" eyebrow="TRANSACTION"><dl className="client-detail-list"><div><dt>Status</dt><dd>{paymentLabel(operation.paymentStatus)}</dd></div><div><dt>Total</dt><dd>R {operation.amount.toFixed(2)}</dd></div></dl></CustomerSection>
+      <CustomerSection title="Payment" eyebrow="TRANSACTION"><dl className="client-detail-list"><div><dt>Status</dt><dd>{paymentLabel(operation.paymentStatus)}</dd></div><div><dt>Total</dt><dd>R {operation.amount.toFixed(2)}</dd></div></dl>{operation.status==='PAYMENT_PENDING'&&operation.paymentStatus==='PENDING'&&<div className="customer-payment-action"><p>This operation passed review. Payment confirmation is required before fulfilment begins.</p><button type="button" className="customer-primary" disabled={paymentBusy} onClick={()=>void pay()}>{paymentBusy?'Starting secure payment…':'Pay now'}</button>{paymentError&&<span role="alert">{paymentError}</span>}</div>}</CustomerSection>
     </div>
   </main>;
 }
