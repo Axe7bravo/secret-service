@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto';
-import { getAuth, type UserRecord } from 'firebase-admin/auth';
+import type { UserRecord } from 'firebase-admin/auth';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { requireAdmin } from '../auth/requireAdmin.js';
 import type { OperationRecord, OperationStatus } from '../domain/operationTypes.js';
-import { getAdminFirestore } from '../firebaseAdmin.js';
+import { getAdminAuth, getAdminFirestore } from '../firebaseAdmin.js';
 
 const DIRECTORY_LIMIT = 500;
 
@@ -67,7 +67,7 @@ export const getAdminDirectory = onCall(async request => {
   try {
     const db = getAdminFirestore();
     const [usersResult, operationsSnapshot] = await Promise.all([
-      getAuth().listUsers(DIRECTORY_LIMIT),
+      getAdminAuth().listUsers(DIRECTORY_LIMIT),
       db.collection('operations').orderBy('createdAt', 'desc').limit(DIRECTORY_LIMIT).get(),
     ]);
     const operations = operationsSnapshot.docs.map(document => document.data() as OperationRecord);

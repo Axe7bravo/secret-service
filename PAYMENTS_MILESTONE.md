@@ -78,3 +78,34 @@ Provider initiation failures leave the operation in `PAYMENT_PENDING` and mark t
 ## Known limitations
 
 Real Yoco checkout and webhook processing are intentionally not enabled until verified provider contracts are supplied. No return route is needed yet because no hosted checkout can be created. Refund initiation, accounting, reconciliation, notifications, and historical attempt arrays remain deferred.
+
+## Firebase Functions deployment initialization
+
+The reported `Cannot determine backend specification. Timeout after 10000` failure was not caused by import-time application work. Static inspection of `src/index.ts` and its complete import graph found no top-level Firestore/Auth reads or writes, network requests, awaited promises, blocking loops, remote secret lookup, or payment-provider initialization. The Yoco module only defines a fail-closed adapter; it performs no I/O until `createYocoCheckout` is invoked by a payment handler. Firebase Admin is also lazy and idempotent through `getApps()`/`getApp()`/`initializeApp()`.
+
+The deployment was reproduced with Firebase CLI debug logging on 2026-09-03. HTTP discovery started successfully, returned the complete specification for all 12 callable exports in approximately 6.6 seconds, uploaded the source, and created all 12 Node.js 22 Gen 2 functions. A subsequent `firebase functions:list --project secret-service-37f6b` confirmed every export is active. The earlier ten-second failure is therefore treated as transient local discovery latency rather than a deterministic source defect; no security-sensitive handler or import structure was changed to mask it.
+
+Deployment configuration is internally consistent:
+
+- `firebase.json` uses `apps/functions` as the Functions source.
+- `apps/functions/package.json` points `main` to `lib/index.js` and declares ESM with `type: module`.
+- `apps/functions/tsconfig.json` compiles `src/index.ts` to `lib/index.js` using NodeNext module semantics.
+- Runtime-relative imports use `.js` extensions and resolve in the emitted output.
+- No Yoco environment variable or Firebase secret is currently required because real checkout/webhook integration intentionally remains disabled and fails closed.
+
+The CLI still warns about the declared `firebase-functions` range. The installed lockfile resolves `firebase-functions` 6.6.0, whose v2 callable API successfully produced and deployed the backend specification. A latest-major upgrade is deferred until its breaking changes can be reviewed; it is not required to resolve this incident.
+
+The first deployment enabled the required Google Cloud APIs and created the functions, but the CLI returned a final housekeeping error because the Functions Artifact Registry has no cleanup policy. Choose an image-retention period deliberately before running `firebase functions:artifacts:setpolicy`; shorter retention limits storage cost while longer retention preserves more rollback images.
+
+Manual verification sequence:
+
+```text
+npm install
+npm run typecheck
+npm run lint
+npm run build
+firebase deploy --only functions --project secret-service-37f6b
+firebase functions:list --project secret-service-37f6b
+```
+
+If local HTTP discovery intermittently exceeds ten seconds again, rerun with `--debug` and preserve the timestamps around `Serving at port ...` and the `/__/functions.yaml` response before changing source code or dependencies.
