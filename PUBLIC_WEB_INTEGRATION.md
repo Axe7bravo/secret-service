@@ -143,3 +143,14 @@ Run the manual typecheck/lint/build commands above; then start web and Customer 
 - Check mobile same-tab navigation, Back behavior, dialog controls, and production `VITE_CUSTOMER_APP_URL`.
 
 No Functions, Firestore rules, indexes, payments or auth service changes were required for this cleanup. Local web/Customer ports remain 3000/3002; production still needs the explicit Customer HTTPS origin.
+## Public footer and informational pages
+
+The shared public footer contains the existing brand/tagline, Explore (Home, Dossiers / Packages, FAQ, Contact), Customer Portal (Login, Sign Up), Legal (Privacy Policy, Terms & Conditions), and a dynamic copyright year. It uses existing tokens, four desktop columns, a two-column tablet layout and stacked mobile layout. Semantic navigation, visible focus and 44px footer link targets are retained. No social placeholders, newsletter, new contact details or checkout flow were added.
+
+New public routes: `/faq`, `/privacy`, `/terms`. FAQ content follows the existing review-before-payment lifecycle, authoritative package snapshot pricing, Yoco checkout and customer-safe status tracking. Privacy covers accounts, recipient/delivery information, operational history, Firebase services, Yoco payment records, staff/ambassador access, retention limitations and contact requests. Terms describes current operation and fulfilment expectations without guaranteed delivery times or a fabricated refund policy.
+
+Both legal pages are explicitly operational MVP drafts requiring legal review and business approval before commercial launch; they are not a compliance certification or final legal policy. Retention arrangements, eligibility and applicable obligations still require review.
+
+Footer Login/Signup retain the existing public `/login` and `/signup` handoff pages and configured Customer Portal destination. Contact, customer authentication, backend catalogues and payment processing are unchanged.
+
+Manual verification: run `npm run typecheck`, `npm run lint`, `npm run build`, then `npm run dev:web`. Open each footer link, directly load `/faq`, `/privacy` and `/terms`, and check keyboard navigation, visible draft notices, desktop/tablet/mobile wrapping and the existing auth handoff. Only read-only file inspection was used during this pass; no verification or deployment commands were run.

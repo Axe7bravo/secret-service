@@ -1,0 +1,16 @@
+import { Link } from 'react-router-dom';
+import { PublicInfoLayout } from '../components/PublicInfoLayout';
+
+export function FaqPage() {
+  return <PublicInfoLayout title="Frequently Asked Questions" introduction="A practical guide to requesting and following a Secret Service operation.">
+    <section><h2>What is Secret Service?</h2><p>Secret Service offers package-based delivery experiences, including anonymous messages and pranks. Browse the current <Link to="/dossiers">Dossiers / Packages</Link> catalogue to see what is available. Requests are reviewed before fulfilment.</p></section>
+    <section><h2>How do I request an operation?</h2><p>Choose a package and continue to the Customer Portal. Sign in or create an account, then provide the recipient, delivery location, message and requested date. Selecting a package on the public site does not reserve it or create an operation. Submit the completed request in the portal.</p></section>
+    <section><h2>Why do I need an account?</h2><p>Your account connects you to your own operation history, payment actions and tracking. The public site directs you to the Customer Portal for login and signup; it does not collect your credentials.</p></section>
+    <section><h2>Which price applies?</h2><p>The catalogue shows current packages and prices. The server checks package availability when you submit and stores the package and price on the operation. Later catalogue edits do not change that stored price. Review your operation details before paying.</p></section>
+    <section><h2>What happens after review, and when do I pay?</h2><p>New requests start under review; payment is not required at submission. An approved operation can move to Payment Required, when the portal offers secure Yoco checkout. Approval alone is not payment confirmation. The backend verifies payment before the operation can progress to preparation.</p></section>
+    <section><h2>Is my requested date guaranteed?</h2><p>The form offers dates and delivery windows within the configured service limits. A requested date is not a guaranteed delivery appointment. Follow your operation in the portal for its current status.</p></section>
+    <section><h2>How do tracking and completion work?</h2><p>The Customer Portal shows customer-facing updates as the team progresses your operation through preparation, scheduling, delivery and completion. Delivered and Operation Complete are separate stages. Tracking is status-based, not a live GPS map; staff notes and private ambassador contact details are not shown.</p></section>
+    <section><h2>What if my request needs attention or delivery fails?</h2><p>The portal may show Requires Attention or Delivery Issue rather than normal progress. The team reviews failures and can retry where workflow rules allow, or cancel the operation. A failure does not automatically promise a retry or refund. Contact us with your operation reference if you need clarification.</p></section>
+    <section><h2>How do I contact you?</h2><p>Use the published contact details on the <Link to="/contact">Contact page</Link>. Include your operation reference if relevant, but do not send passwords, card details or unnecessary recipient information. Contact is for enquiries, not checkout or submitting new operations.</p></section>
+  </PublicInfoLayout>;
+}
