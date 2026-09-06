@@ -10,4 +10,5 @@ export { setCustomerOperationArchived } from './commands/setCustomerOperationArc
 export { getAdminSettings } from './queries/getAdminSettings.js';
 export { saveAdminSettings } from './commands/saveAdminSettings.js';
 export { createOperationPayment } from './commands/createOperationPayment.js';
+export { yocoWebhook } from './payments/yocoWebhook.js';
 //# sourceMappingURL=index.d.ts.map

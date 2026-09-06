@@ -1,5 +1,6 @@
 export interface ConfirmedProviderPayment {
     paymentId: string;
+    providerCheckoutId: string;
     providerPaymentId: string;
     amountMinor: number;
     currency: 'ZAR';

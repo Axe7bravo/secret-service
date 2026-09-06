@@ -1,80 +1,126 @@
-# Payments Milestone — Yoco Gateway Boundary
+# Payments Milestone — Yoco Checkout
 
 ## Product and lifecycle model
 
-Secret Service uses one operation, one package snapshot, and one payment. There is no cart, quantity, basket, or multi-operation checkout. Moderation remains before payment:
+Secret Service uses one operation, one immutable package snapshot, and one payment record. There is no cart. Only an owned operation in `PAYMENT_PENDING` with a pending payment summary can start checkout. The amount is read server-side from `operation.package.priceMinor`, is already an integer number of cents, and is sent to Yoco unchanged with currency `ZAR`.
 
-`REVIEW_REQUIRED → APPROVED → PAYMENT_PENDING → PAID → PREPARING`
+The browser redirect is never proof of payment. Only a verified Yoco webhook can invoke the internal settlement primitive and move `PAYMENT_PENDING → PAID`.
 
-The operation lifecycle and payment lifecycle remain separate. `operation.status = PAYMENT_PENDING` means the approved operation is awaiting payment. A payment record uses `PENDING`, `PAID`, `FAILED`, `CANCELLED`, or `REFUNDED`.
+## Checkout architecture
 
-## Architecture
+`Customer Operation Detail → createOperationPayment callable → transactional eligibility/reservation → Yoco Checkout API → hosted redirectUrl`
 
-The implemented boundary is:
+`createOperationPayment` requires Firebase Authentication and operation ownership. The callable is bound only to `YOCO_SECRET_KEY`; the key is read inside the handler and passed to the server-only provider adapter. The adapter posts to `https://payments.yoco.com/api/checkouts` with:
 
-`Customer Operation Detail → createOperationPayment callable → payment eligibility/idempotency reservation → Yoco adapter`
+- the immutable integer `amountMinor` as `amount`;
+- server-fixed `ZAR` currency;
+- configured customer return URLs;
+- `clientReferenceId = paymentId`;
+- `externalId = operationId`;
+- non-sensitive operation/payment IDs in metadata;
+- a persisted `Idempotency-Key`.
 
-Trusted settlement is:
+The response must contain a checkout ID, HTTPS redirect URL, the expected integer amount, and `ZAR`. Safe reconciliation fields are stored on `payments/{operationId}`. No credentials or payment-instrument details are stored.
 
-`verified provider webhook adapter → confirmOperationPayment → payment + operation + projection + activity transaction`
+## Idempotency
 
-The repository did not contain a verified current Yoco checkout request/response contract or webhook signature specification. In accordance with the milestone's fail-safe requirement, `yocoProvider.ts` deliberately refuses provider initiation. No endpoint, request field, minimum amount, or signature algorithm has been invented. Firebase payment initiation therefore remains closed until the provider contract is supplied and reviewed.
+The payment document records `attemptNumber` and `idempotencyKey`. The key is deterministic: `<operationId>:checkout:<attemptNumber>`. Concurrent or repeated calls for the same pending attempt reuse the stored key, so Yoco converges them onto the same checkout. A completed checkout URL is returned directly. A retry after a failed provider attempt increments the attempt number and receives a new key. The stable payment document remains `payments/{operationId}`.
 
-## Authoritative payment record
+## Customer returns
 
-`payments/{operationId}` is the stable one-operation payment record. It stores the operation/customer relationship, `YOCO` provider, immutable amount in integer minor units, `ZAR`, safe provider identifiers, checkout URL when available, lifecycle timestamps, and a safe failure category. It never stores card numbers, CVV, credentials, secrets, or raw provider payloads.
+The customer app provides:
 
-The stable operation ID prevents uncontrolled parallel payment records. Initiation first reserves the record transactionally. Concurrent requests reuse the pending reservation rather than issuing another provider call. Failed initiation marks the attempt `FAILED`, allowing a deliberate retry against the same payment identity.
+- `/operations/:operationId/payment/success`
+- `/operations/:operationId/payment/cancelled`
+- `/operations/:operationId/payment/failed`
 
-## Eligibility and price integrity
+Success shows verification pending until the UID-scoped realtime customer projection reports payment as paid. Cancelled and failed returns provide safe feedback and link back to the operation. None of these routes writes payment or operation state.
 
-The callable derives the customer UID from Firebase Authentication and requires ownership, `PAYMENT_PENDING`, payment summary `PENDING`, an unsettled payment record, positive integer amount, and `ZAR`. Amount and currency come exclusively from the immutable operation package snapshot. The browser submits only the operation ID.
+## Webhook architecture
 
-## Customer payment experience
+The exported public HTTP Function is `yocoWebhook`, in `us-central1`. Its deployed URL normally follows:
 
-Operation Detail shows Pay now only for an operation whose authoritative customer projection is payment pending. Duplicate clicks are disabled during initiation. Firebase mode calls the trusted Function and redirects only when the adapter returns a provider-safe checkout URL. A redirect or browser return is never treated as proof of payment. The existing realtime customer projection is the confirmation channel.
+`https://us-central1-<project-id>.cloudfunctions.net/yocoWebhook`
 
-Mock mode uses the same command interface and simulates trusted confirmation by moving the mock operation from `PAYMENT_PENDING` to `PAID`. Mock identifiers are clearly prefixed and are not credentials.
+It is bound only to `YOCO_WEBHOOK_SECRET` and does not require Firebase Auth because Yoco is the caller. It requires `webhook-id`, `webhook-timestamp`, and `webhook-signature`, uses the exact raw request body, removes the `whsec_` prefix, base64-decodes the secret, and calculates HMAC-SHA256 over:
 
-## Trusted settlement
+`<webhook-id>.<webhook-timestamp>.<raw-body>`
 
-`confirmOperationPayment` is an internal settlement primitive, not a public Function export. It is intended only for a future webhook adapter after authenticity verification. It validates provider, payment ID, amount, currency, customer ownership, immutable operation snapshot, payment state, and the canonical `PAYMENT_PENDING → PAID` transition. Duplicate successful events return `ALREADY_CONFIRMED` without a second transition or activity record. A valid confirmation atomically updates the payment, operation payment summary, operation status, customer-safe projection, and activity history while preserving `archived` and `archivedAt`.
+Supported `v1` signatures are base64-decoded and compared with `crypto.timingSafeEqual`. Timestamps outside the 180-second replay window are rejected before JSON processing. Invalid signatures are never acknowledged with 2xx.
 
-## Webhook and Yoco configuration status
+Only `payment.succeeded` and `payment.failed` are processed. Other verified events receive 2xx without mutation. The handler reconciles `metadata.checkoutId` against the uniquely stored `providerCheckoutId`; amount and currency are checked when present. It does not trust an operation ID in metadata as settlement authority.
 
-No webhook endpoint is exported because the repository contains no authoritative Yoco signature contract. Shipping an endpoint with guessed verification would be less secure than keeping it closed. Before Firebase mode can process real payments, obtain current Yoco documentation/account details and implement:
+## Settlement and failure
 
-1. the verified checkout endpoint and exact request/response fields in `yocoProvider.ts`;
-2. the supported server-side secret mechanism using Firebase Functions secrets;
-3. test/live credential selection through explicit server configuration;
-4. the exact webhook signature verification algorithm and required headers;
-5. a webhook handler that calls `confirmOperationPayment` only after verification;
-6. provider-specific minimum-amount validation in the adapter.
+A successful verified event calls `confirmOperationPayment`. That transaction rechecks provider, checkout ID, amount, currency, ownership, immutable operation snapshot, payment state, and canonical transition. It atomically updates payment and operation state, writes activity, and rebuilds the customer projection while preserving `archived` and `archivedAt`. Duplicate success delivery returns 2xx without duplicate activity.
 
-No `VITE_` secret is permitted. No environment variable name is treated as active until the verified contract establishes its meaning. Test/live mode must be explicit and must not be inferred from hostname.
+Yoco payment webhook content is read from the documented top-level `payload` shape. The parser retains compatibility with a payload nested below `data`, but top-level `payload.metadata.checkoutId` is the primary reconciliation source. A provider-verified success can recover a matching local `FAILED` attempt as well as a `PENDING` attempt; checkout ID, amount, currency, operation state, and ownership must still reconcile before settlement.
+
+A verified `payment.failed` event marks only the matching pending payment attempt failed and writes a safe activity record. The operation remains `PAYMENT_PENDING`, and a later customer retry creates a new attempt key. Raw provider diagnostics are not exposed to customers.
+
+## Secrets and non-secret configuration
+
+Required Firebase secrets:
+
+- `YOCO_SECRET_KEY` — use a Yoco test secret beginning `sk_test_` while testing.
+- `YOCO_WEBHOOK_SECRET` — the one-time webhook signing secret returned by Yoco, beginning `whsec_`.
+
+Required parameter:
+
+- `CUSTOMER_APP_URL` — the public origin of the deployed customer dashboard, for example `https://customer.example.com`. It is non-secret and is used only to construct return routes.
+
+Never place either secret in a `VITE_` variable, frontend environment file, Firestore, Admin Settings, source, or logs. No Yoco public key is required for hosted Checkout.
+
+## Operator setup
+
+1. Store the test checkout secret:
+   `firebase functions:secrets:set YOCO_SECRET_KEY --project secret-service-37f6b`
+2. Deploy once and provide `CUSTOMER_APP_URL` when Firebase prompts for the parameter. Use the deployed customer dashboard HTTPS origin.
+3. Register a webhook with Yoco using `POST https://payments.yoco.com/api/webhooks`, Bearer authentication with the Yoco secret key, and a payload containing a descriptive `name` and the deployed `yocoWebhook` URL. Registration is an operator action and is never performed at Functions startup.
+4. Copy the webhook secret returned once by Yoco into Firebase Secret Manager:
+   `firebase functions:secrets:set YOCO_WEBHOOK_SECRET --project secret-service-37f6b`
+5. Deploy Functions again after both secrets are configured.
+6. Sign in as a customer, pay a `PAYMENT_PENDING` operation using Yoco test checkout, and confirm that webhook settlement updates the customer projection.
+
+Do not paste secret values into command history as arguments. The Firebase CLI secret command prompts securely for the value.
 
 ## Admin Payments
 
-The Admin sidebar now activates `/payments` and `/payments/:paymentId`. The list supports status filtering and reference search, and shows safe operational fields. Detail shows linked operation, customer reference, amount, provider identifiers, timestamps, and safe failure classification. It provides visibility only: no fabricated refund or settlement controls were added.
+The existing Admin Payments list/detail remains read-only. It continues to show safe payment and reconciliation state, including checkout/payment identifiers, attempt number, and provider processing mode when present. No client-side settlement or refund control was added.
 
-Firestore permits authenticated custom-claim admins to read payments and denies every browser write. Customers receive payment state only through their owned customer-safe projection.
+An Admin **Verify Payment** mutation has intentionally not been added yet. The repository currently contains a verified Yoco checkout-creation contract, but no verified checkout-retrieval/status endpoint or response contract. Inventing an endpoint or treating Firestore state as provider verification would create an unsafe manual paid path. Until a verified retrieval contract is supplied, delayed payments are recovered by replaying the signed Yoco webhook from the Yoco operator dashboard.
 
-## Failure, cancellation, and refunds
+## Customer status refresh
 
-Provider initiation failures leave the operation in `PAYMENT_PENDING` and mark the payment attempt failed. Checkout abandonment or payment cancellation must not cancel the operation. Refund execution is deferred because no verified Yoco refund contract exists. Existing `REFUNDED` records remain representable and visible.
+The success-return page's **Check status** control refreshes the customer's UID-scoped realtime Firestore subscription. It disables repeated clicks and reports either **Payment confirmed** or **Still awaiting secure confirmation from Yoco**. It does not query an undocumented provider endpoint and cannot settle payment by itself. Normal settlement remains webhook-driven.
 
-## Manual verification checklist
+## Security boundaries
 
-- For an end-to-end Admin → Customer test, set `VITE_DATA_SOURCE=firestore` for both `apps/admin` and `apps/customer`, then restart both dev servers. Admin reads and trusted writes now use this single mode selector; `VITE_OPERATION_WRITE_MODE` is no longer used.
-- Confirm a review/rejected operation has no Pay now action.
-- Confirm an approved `PAYMENT_PENDING` operation derives its amount from the operation snapshot.
-- Double-click Pay now and verify only one initiation is allowed.
-- In mock mode, confirm payment changes the realtime operation state to Confirmed.
-- In Firebase mode without a provider adapter, confirm initiation fails closed safely.
-- Verify admin payment list/detail access with an admin custom claim and denial without it.
-- After wiring verified Yoco contracts, test invalid signatures, amount/currency mismatch, duplicate webhooks, failed payment retry, checkout abandonment, and delayed success.
-- Run `npm run typecheck`, `npm run lint`, and `npm run build` manually.
+- Secret material exists only in secret-bound Functions.
+- The browser supplies only an operation ID; amount and currency are authoritative server values.
+- Customers cannot write payment documents or set `PAID`.
+- Return URLs cannot settle payment.
+- Webhook verification uses raw bytes, constant-time comparison, and replay protection.
+- Settlement requires an exact stored checkout match and is idempotent.
+- Card details are collected only by Yoco's hosted checkout and are never stored by Secret Service.
 
 ## Known limitations
 
-Real Yoco checkout and webhook processing are intentionally not enabled until verified provider contracts are supplied. No return route is needed yet because no hosted checkout can be created. Refund initiation, accounting, reconciliation, notifications, and historical attempt arrays remain deferred.
+Refund initiation, accounting exports, notifications, stored cards, subscriptions, discounts, and historical attempt subcollections remain deferred. The current single payment document retains the current attempt plus its monotonically increasing attempt number rather than a full provider-attempt ledger.
+
+## Manual verification
+
+Run manually:
+
+```text
+npm run typecheck
+npm run lint
+npm run build
+```
+
+Then deploy manually if those pass:
+
+```powershell
+$env:FUNCTIONS_DISCOVERY_TIMEOUT="30"
+firebase deploy --only functions --project secret-service-37f6b
+```

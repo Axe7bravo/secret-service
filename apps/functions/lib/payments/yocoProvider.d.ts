@@ -3,20 +3,24 @@ export interface YocoCheckoutRequest {
     operationId: string;
     amountMinor: number;
     currency: 'ZAR';
-    customerId: string;
+    idempotencyKey: string;
+    successUrl: string;
+    cancelUrl: string;
+    failureUrl: string;
+    secretKey: string;
 }
 export interface YocoCheckoutResult {
     providerCheckoutId: string;
     checkoutUrl: string;
+    processingMode?: string;
+    providerPaymentId?: string;
 }
 export type YocoCheckoutProvider = (request: YocoCheckoutRequest) => Promise<YocoCheckoutResult>;
 export declare class YocoProviderConfigurationError extends Error {
+    constructor(message?: string);
+}
+export declare class YocoProviderResponseError extends Error {
     constructor();
 }
-/**
- * Server-only provider boundary. The repository contains no verified current
- * Yoco checkout or webhook contract, so this adapter deliberately fails closed
- * instead of fabricating endpoint fields or signature verification.
- */
 export declare const createYocoCheckout: YocoCheckoutProvider;
 //# sourceMappingURL=yocoProvider.d.ts.map

@@ -16,7 +16,7 @@ export const useCustomerOperations = (): CustomerOperationsState => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
-  const refresh = useCallback(() => setRevision(value => value + 1), []);
+  const refresh = useCallback(() => { setLoading(true); setRevision(value => value + 1); }, []);
 
   useEffect(() => {
     if (!user) {
