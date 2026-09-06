@@ -11,10 +11,12 @@
     "dev:web": "npm run dev --workspace=@secret-service/web",
     "dev:admin": "npm run dev --workspace=@secret-service/admin",
     "dev:customer": "npm run dev --workspace=@secret-service/customer",
+    "dev:ambassador": "npm run dev --workspace=@secret-service/ambassador",
     "build": "npm run build --workspaces --if-present",
     "build:web": "npm run build --workspace=@secret-service/web",
     "build:admin": "npm run build --workspace=@secret-service/admin",
     "build:customer": "npm run build --workspace=@secret-service/customer",
+    "build:ambassador": "npm run build --workspace=@secret-service/ambassador",
     "lint": "eslint apps packages --max-warnings=0",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },

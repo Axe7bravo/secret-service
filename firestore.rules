@@ -2,7 +2,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function isAdmin() { return signedIn() && (request.auth.token.admin == true || request.auth.token.role == 'admin'); }
+    // Match trusted Functions; legacy booleans must not grant another role Admin access.
+    function isAdmin() { return signedIn() && request.auth.token.role == 'admin'; }
 
     match /operations/{operationId} {
       allow read: if isAdmin();
@@ -31,6 +32,28 @@ service cloud.firestore {
     match /ambassadors/{ambassadorId} {
       allow read: if isAdmin();
       allow write: if false;
+    }
+    // Allowlisted fulfilment projection; only trusted writers may create it.
+    // ambassadorUid and ambassadorId are copied from the linked roster by Admin.
+    match /ambassadorOperations/{operationId} {
+      function activeLinkedAmbassador() {
+        // Both dependent paths are fixed for the caller, not derived from an
+        // unconstrained result field. They can be checked once for a UID query.
+        let account = get(/databases/$(database)/documents/ambassadorAccounts/$(request.auth.uid)).data;
+        let roster = get(/databases/$(database)/documents/ambassadors/$(account.ambassadorId)).data;
+        return roster.authUid == request.auth.uid && roster.active == true;
+      }
+      function ownsActiveAssignment() {
+        return signedIn() && request.auth.token.role == 'ambassador'
+          && resource.data.ambassadorUid == request.auth.uid
+          && activeLinkedAmbassador();
+      }
+      allow get: if ownsActiveAssignment();
+      allow list: if ownsActiveAssignment() && request.query.limit <= 200;
+      allow write: if false;
+    }
+    match /ambassadorAccounts/{uid} {
+      allow read, write: if false;
     }
     match /campuses/{campusId} {
       allow read: if isAdmin();

@@ -5,6 +5,8 @@ const normalTransitions = {
     OUT_FOR_DELIVERY: ['DELIVERED', 'DELIVERY_FAILED'], DELIVERED: ['COMPLETED'], DELIVERY_FAILED: ['READY_FOR_DELIVERY', 'CANCELLED'],
     COMPLETED: [], REJECTED: [], CANCELLED: [], REFUNDED: [],
 };
+export const ambassadorActionsFor = (status) => normalTransitions[status].filter((target) => (status === 'AMBASSADOR_ASSIGNED' && target === 'OUT_FOR_DELIVERY') ||
+    (status === 'OUT_FOR_DELIVERY' && (target === 'DELIVERED' || target === 'DELIVERY_FAILED')));
 export const validateTransition = (from, to, metadata) => {
     if (!normalTransitions[from].includes(to))
         throw new Error(`Transition ${from} -> ${to} is not allowed.`);

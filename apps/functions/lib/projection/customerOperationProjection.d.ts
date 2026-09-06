@@ -14,7 +14,7 @@ export declare const buildCustomerOperationProjection: (operation: OperationReco
         amountMinor: number;
         currency: "ZAR";
     };
-    status: "APPROVED" | "PREPARING" | "DELIVERED" | "CANCELLED" | "REFUNDED" | "UNDER_REVIEW" | "PAYMENT_REQUIRED" | "CONFIRMED" | "DELIVERY_SCHEDULED" | "IN_PROGRESS" | "COMPLETE" | "REQUIRES_ATTENTION" | "DELIVERY_ISSUE";
+    status: "DELIVERED" | "APPROVED" | "PREPARING" | "CANCELLED" | "REFUNDED" | "UNDER_REVIEW" | "PAYMENT_REQUIRED" | "CONFIRMED" | "DELIVERY_SCHEDULED" | "IN_PROGRESS" | "COMPLETE" | "REQUIRES_ATTENTION" | "DELIVERY_ISSUE";
     recipient: {
         name: string;
         campus: string;
@@ -33,7 +33,7 @@ export declare const buildCustomerOperationProjection: (operation: OperationReco
         currency: "ZAR";
     };
     tracking: {
-        status: "APPROVED" | "PREPARING" | "DELIVERED" | "CANCELLED" | "REFUNDED" | "UNDER_REVIEW" | "PAYMENT_REQUIRED" | "CONFIRMED" | "DELIVERY_SCHEDULED" | "IN_PROGRESS" | "COMPLETE" | "REQUIRES_ATTENTION" | "DELIVERY_ISSUE";
+        status: "DELIVERED" | "APPROVED" | "PREPARING" | "CANCELLED" | "REFUNDED" | "UNDER_REVIEW" | "PAYMENT_REQUIRED" | "CONFIRMED" | "DELIVERY_SCHEDULED" | "IN_PROGRESS" | "COMPLETE" | "REQUIRES_ATTENTION" | "DELIVERY_ISSUE";
         updatedAt: Timestamp;
     };
     createdAt: Timestamp;

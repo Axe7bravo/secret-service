@@ -1,3 +1,4 @@
+import { writeAmbassadorOperationProjection } from '../projection/ambassadorOperationProjection.js';
 import { Timestamp } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { requireAdmin } from '../auth/requireAdmin.js';
@@ -27,23 +28,37 @@ export const transitionOperation = onCall(async (request) => {
             validateTransition(operation.status, toStatus, metadata);
             if (toStatus === 'APPROVED')
                 validateTransition('APPROVED', 'PAYMENT_PENDING', {});
+            let assignedUid;
             if (toStatus === 'AMBASSADOR_ASSIGNED' && metadata.ambassadorId) {
                 const ambassadorSnapshot = await transaction.get(db.collection('ambassadors').doc(metadata.ambassadorId));
                 if (!ambassadorSnapshot.exists)
                     throw new HttpsError('failed-precondition', 'Ambassador no longer exists.');
                 const ambassador = ambassadorSnapshot.data();
+                assignedUid = ambassador.authUid;
                 const campus = operation.recipient.campusCode ?? operation.recipient.campus.trim().toLocaleLowerCase('en-ZA').replace(/\s+/g, '-');
                 if (!ambassador.active || ambassador.availability !== 'AVAILABLE' || (ambassador.campusCodes.length > 0 && !ambassador.campusCodes.includes(campus)))
                     throw new HttpsError('failed-precondition', 'Ambassador is not eligible for this operation.');
             }
             const now = Timestamp.now();
             const nextDelivery = { ...operation.delivery };
-            if (toStatus === 'AMBASSADOR_ASSIGNED')
+            if (toStatus === 'AMBASSADOR_ASSIGNED') {
                 nextDelivery.assignedAmbassadorId = metadata.ambassadorId;
+                nextDelivery.assignedAt = now;
+                delete nextDelivery.assignedAmbassadorUid;
+                delete nextDelivery.startedAt;
+                if (assignedUid)
+                    nextDelivery.assignedAmbassadorUid = assignedUid;
+            }
+            if (toStatus === 'OUT_FOR_DELIVERY')
+                nextDelivery.startedAt = now;
             if (toStatus === 'DELIVERED')
                 nextDelivery.deliveredAt = now;
-            if (operation.status === 'DELIVERY_FAILED' && toStatus === 'READY_FOR_DELIVERY')
+            if (operation.status === 'DELIVERY_FAILED' && toStatus === 'READY_FOR_DELIVERY') {
                 delete nextDelivery.assignedAmbassadorId;
+                delete nextDelivery.assignedAmbassadorUid;
+                delete nextDelivery.assignedAt;
+                delete nextDelivery.startedAt;
+            }
             const finalStatus = toStatus === 'APPROVED' ? 'PAYMENT_PENDING' : toStatus;
             const nextPaymentSummary = toStatus === 'APPROVED' ? { ...operation.paymentSummary, status: 'PENDING' } : operation.paymentSummary;
             const next = { ...operation, status: finalStatus, updatedAt: now, delivery: nextDelivery, paymentSummary: nextPaymentSummary };
@@ -64,6 +79,7 @@ export const transitionOperation = onCall(async (request) => {
             const nextInternal = { ...internal, updatedAt: now, moderation: nextModeration, delivery: nextInternalDelivery, ...(toStatus === 'CANCELLED' ? { staffNotes: metadata.reason?.trim() } : {}) };
             const activityNote = metadata.reason?.trim() ?? (toStatus === 'AMBASSADOR_ASSIGNED' && metadata.ambassadorId ? `Assigned ambassador: ${metadata.ambassadorId}` : operation.status === 'DELIVERY_FAILED' && toStatus === 'READY_FOR_DELIVERY' ? 'Delivery details reviewed for retry' : undefined);
             transaction.update(operationRef, operationUpdate);
+            writeAmbassadorOperationProjection(transaction, db, next);
             transaction.set(internalRef, nextInternal);
             transaction.set(projectionRef, buildCustomerOperationProjection(next, customerArchiveMetadataFrom(projectionSnapshot.data())));
             transaction.create(activityRef, { operationId, type: 'STATUS_TRANSITION', timestamp: now, actorId: actor.uid, actorRole: 'ADMIN', fromStatus: operation.status, toStatus, ...(metadata.reasonCode ? { reasonCode: metadata.reasonCode } : {}), ...(activityNote ? { note: activityNote } : {}) });

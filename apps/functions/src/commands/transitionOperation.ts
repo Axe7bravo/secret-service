@@ -1,3 +1,4 @@
+import { writeAmbassadorOperationProjection } from '../projection/ambassadorOperationProjection.js';
 import { Timestamp } from 'firebase-admin/firestore';
 import { HttpsError,onCall } from 'firebase-functions/v2/https';
 import { requireAdmin } from '../auth/requireAdmin.js';
@@ -20,12 +21,14 @@ export const transitionOperation=onCall<TransitionInput>(async request=>{
       const operation=operationSnapshot.data() as OperationRecord;const internal=(internalSnapshot.exists?internalSnapshot.data():{operationId,moderation:{status:'PENDING'},delivery:{retryCount:0},safetyFlags:[]}) as OperationInternalRecord;
       validateTransition(operation.status,toStatus,metadata);
       if(toStatus==='APPROVED')validateTransition('APPROVED','PAYMENT_PENDING',{});
-      if(toStatus==='AMBASSADOR_ASSIGNED'&&metadata.ambassadorId){const ambassadorSnapshot=await transaction.get(db.collection('ambassadors').doc(metadata.ambassadorId));if(!ambassadorSnapshot.exists)throw new HttpsError('failed-precondition','Ambassador no longer exists.');const ambassador=ambassadorSnapshot.data() as AmbassadorRecord;const campus=operation.recipient.campusCode??operation.recipient.campus.trim().toLocaleLowerCase('en-ZA').replace(/\s+/g,'-');if(!ambassador.active||ambassador.availability!=='AVAILABLE'||(ambassador.campusCodes.length>0&&!ambassador.campusCodes.includes(campus)))throw new HttpsError('failed-precondition','Ambassador is not eligible for this operation.');}
+      let assignedUid:string|undefined;
+      if(toStatus==='AMBASSADOR_ASSIGNED'&&metadata.ambassadorId){const ambassadorSnapshot=await transaction.get(db.collection('ambassadors').doc(metadata.ambassadorId));if(!ambassadorSnapshot.exists)throw new HttpsError('failed-precondition','Ambassador no longer exists.');const ambassador=ambassadorSnapshot.data() as AmbassadorRecord;assignedUid=ambassador.authUid;const campus=operation.recipient.campusCode??operation.recipient.campus.trim().toLocaleLowerCase('en-ZA').replace(/\s+/g,'-');if(!ambassador.active||ambassador.availability!=='AVAILABLE'||(ambassador.campusCodes.length>0&&!ambassador.campusCodes.includes(campus)))throw new HttpsError('failed-precondition','Ambassador is not eligible for this operation.');}
       const now=Timestamp.now();
       const nextDelivery={...operation.delivery};
-      if(toStatus==='AMBASSADOR_ASSIGNED')nextDelivery.assignedAmbassadorId=metadata.ambassadorId;
+      if(toStatus==='AMBASSADOR_ASSIGNED'){nextDelivery.assignedAmbassadorId=metadata.ambassadorId;nextDelivery.assignedAt=now;delete nextDelivery.assignedAmbassadorUid;delete nextDelivery.startedAt;if(assignedUid)nextDelivery.assignedAmbassadorUid=assignedUid;}
+      if(toStatus==='OUT_FOR_DELIVERY')nextDelivery.startedAt=now;
       if(toStatus==='DELIVERED')nextDelivery.deliveredAt=now;
-      if(operation.status==='DELIVERY_FAILED'&&toStatus==='READY_FOR_DELIVERY')delete nextDelivery.assignedAmbassadorId;
+      if(operation.status==='DELIVERY_FAILED'&&toStatus==='READY_FOR_DELIVERY'){delete nextDelivery.assignedAmbassadorId;delete nextDelivery.assignedAmbassadorUid;delete nextDelivery.assignedAt;delete nextDelivery.startedAt;}
       const finalStatus:OperationStatus=toStatus==='APPROVED'?'PAYMENT_PENDING':toStatus;
       const nextPaymentSummary=toStatus==='APPROVED'?{...operation.paymentSummary,status:'PENDING' as const}:operation.paymentSummary;
       const next:OperationRecord={...operation,status:finalStatus,updatedAt:now,delivery:nextDelivery,paymentSummary:nextPaymentSummary};
@@ -38,7 +41,7 @@ export const transitionOperation=onCall<TransitionInput>(async request=>{
       if(operation.status==='DELIVERY_FAILED'&&toStatus==='READY_FOR_DELIVERY'){nextInternalDelivery.retryCount+=1;delete nextInternalDelivery.failureReasonCode;delete nextInternalDelivery.failureDetails;}
       const nextInternal:OperationInternalRecord={...internal,updatedAt:now,moderation:nextModeration,delivery:nextInternalDelivery,...(toStatus==='CANCELLED'?{staffNotes:metadata.reason?.trim()}:{})};
       const activityNote=metadata.reason?.trim()??(toStatus==='AMBASSADOR_ASSIGNED'&&metadata.ambassadorId?`Assigned ambassador: ${metadata.ambassadorId}`:operation.status==='DELIVERY_FAILED'&&toStatus==='READY_FOR_DELIVERY'?'Delivery details reviewed for retry':undefined);
-      transaction.update(operationRef,operationUpdate);transaction.set(internalRef,nextInternal);transaction.set(projectionRef,buildCustomerOperationProjection(next,customerArchiveMetadataFrom(projectionSnapshot.data())));transaction.create(activityRef,{operationId,type:'STATUS_TRANSITION',timestamp:now,actorId:actor.uid,actorRole:'ADMIN',fromStatus:operation.status,toStatus,...(metadata.reasonCode?{reasonCode:metadata.reasonCode}:{}),...(activityNote?{note:activityNote}:{})});
+      transaction.update(operationRef,operationUpdate);writeAmbassadorOperationProjection(transaction,db,next);transaction.set(internalRef,nextInternal);transaction.set(projectionRef,buildCustomerOperationProjection(next,customerArchiveMetadataFrom(projectionSnapshot.data())));transaction.create(activityRef,{operationId,type:'STATUS_TRANSITION',timestamp:now,actorId:actor.uid,actorRole:'ADMIN',fromStatus:operation.status,toStatus,...(metadata.reasonCode?{reasonCode:metadata.reasonCode}:{}),...(activityNote?{note:activityNote}:{})});
       if(toStatus==='APPROVED')transaction.create(paymentRequiredActivityRef,{operationId,type:'STATUS_TRANSITION',timestamp:Timestamp.fromMillis(now.toMillis()+1),actorId:'trusted-workflow',actorRole:'SYSTEM',fromStatus:'APPROVED',toStatus:'PAYMENT_PENDING',note:'Moderation approved; payment is now required.'});
     });
     return {operationId,toStatus:toStatus==='APPROVED'?'PAYMENT_PENDING':toStatus};

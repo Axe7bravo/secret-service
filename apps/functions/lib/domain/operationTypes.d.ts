@@ -24,6 +24,9 @@ export interface OperationRecord {
         requestedDate: string;
         requestedWindow: string;
         assignedAmbassadorId?: string;
+        assignedAmbassadorUid?: string;
+        assignedAt?: Timestamp;
+        startedAt?: Timestamp;
         deliveredAt?: Timestamp;
     };
     anonymousMessage: string;
@@ -70,6 +73,7 @@ export interface PackageRecord {
 }
 export interface AmbassadorRecord {
     ambassadorId: string;
+    authUid?: string;
     displayName: string;
     phone?: string;
     email?: string;

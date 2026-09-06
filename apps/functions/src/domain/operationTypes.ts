@@ -7,7 +7,7 @@ export interface OperationRecord {
   operationId:string; customerId:string; status:OperationStatus;
   package:{packageId:string;nameSnapshot:string;priceMinor:number;currency:'ZAR'};
   recipient:{name:string;phone:string;campus:string;campusCode?:string;residence:string;deliveryLocation:string;deliveryInstructions?:string};
-  delivery:{requestedDate:string;requestedWindow:string;assignedAmbassadorId?:string;deliveredAt?:Timestamp};
+  delivery:{requestedDate:string;requestedWindow:string;assignedAmbassadorId?:string;assignedAmbassadorUid?:string;assignedAt?:Timestamp;startedAt?:Timestamp;deliveredAt?:Timestamp};
   anonymousMessage:string;
   paymentSummary:{status:'NOT_REQUIRED_YET'|'PENDING'|'PAID'|'REFUNDED'|'FAILED';amountMinor:number;currency:'ZAR';paidAt?:Timestamp};
   createdAt:Timestamp;updatedAt:Timestamp;
@@ -27,7 +27,7 @@ export interface PackageRecord {
 }
 
 export interface AmbassadorRecord {
-  ambassadorId:string;displayName:string;phone?:string;email?:string;campusCodes:string[];
+  ambassadorId:string;authUid?:string;displayName:string;phone?:string;email?:string;campusCodes:string[];
   active:boolean;availability:'AVAILABLE'|'UNAVAILABLE';createdAt:Timestamp;updatedAt:Timestamp;
 }
 
