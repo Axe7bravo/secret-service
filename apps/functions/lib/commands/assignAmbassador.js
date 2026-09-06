@@ -1,3 +1,4 @@
+import { writeAmbassadorOperationProjection } from '../projection/ambassadorOperationProjection.js';
 import { Timestamp } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { requireAdmin } from '../auth/requireAdmin.js';
@@ -24,6 +25,7 @@ export const assignAmbassador = onCall(async (request) => {
         throw new HttpsError('failed-precondition', 'Ambassador does not service this campus.'); if (!['READY_FOR_DELIVERY', 'AMBASSADOR_ASSIGNED'].includes(operation.status))
         throw new HttpsError('failed-precondition', 'Operation is not available for assignment.'); if (operation.delivery.assignedAmbassadorId === ambassadorId)
         throw new HttpsError('already-exists', 'This ambassador is already assigned.'); const nextStatus = operation.status === 'READY_FOR_DELIVERY' ? 'AMBASSADOR_ASSIGNED' : operation.status; if (operation.status === 'READY_FOR_DELIVERY')
-        validateTransition(operation.status, nextStatus, { ambassadorId }); const now = Timestamp.now(); const delivery = { ...operation.delivery, assignedAmbassadorId: ambassadorId }; const next = { ...operation, status: nextStatus, delivery, updatedAt: now }; transaction.update(operationRef, { status: nextStatus, delivery, updatedAt: now }); transaction.set(projectionRef, buildCustomerOperationProjection(next, customerArchiveMetadataFrom(projectionSnapshot.data()))); transaction.create(activityRef, { operationId, type: operation.status === 'READY_FOR_DELIVERY' ? 'AMBASSADOR_ASSIGNED' : 'AMBASSADOR_REASSIGNED', timestamp: now, actorId: actor.uid, actorRole: 'ADMIN', fromStatus: operation.status, toStatus: nextStatus, note: `Ambassador reference: ${ambassadorId}` }); });
+        validateTransition(operation.status, nextStatus, { ambassadorId }); const now = Timestamp.now(); const delivery = { ...operation.delivery, assignedAmbassadorId: ambassadorId, assignedAt: now }; delete delivery.assignedAmbassadorUid; delete delivery.startedAt; if (ambassador.authUid)
+        delivery.assignedAmbassadorUid = ambassador.authUid; const next = { ...operation, status: nextStatus, delivery, updatedAt: now }; transaction.update(operationRef, { status: nextStatus, delivery, updatedAt: now }); writeAmbassadorOperationProjection(transaction, db, next); transaction.set(projectionRef, buildCustomerOperationProjection(next, customerArchiveMetadataFrom(projectionSnapshot.data()))); transaction.create(activityRef, { operationId, type: operation.status === 'READY_FOR_DELIVERY' ? 'AMBASSADOR_ASSIGNED' : 'AMBASSADOR_REASSIGNED', timestamp: now, actorId: actor.uid, actorRole: 'ADMIN', fromStatus: operation.status, toStatus: nextStatus, note: `Ambassador reference: ${ambassadorId}` }); });
     return { operationId, ambassadorId };
 });

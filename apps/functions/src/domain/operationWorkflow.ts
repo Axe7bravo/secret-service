@@ -10,6 +10,14 @@ const normalTransitions: Readonly<Record<OperationStatus, readonly OperationStat
 
 export interface TransitionMetadata { reason?:string;reasonCode?:string;ambassadorId?:string;reviewConfirmed?:boolean }
 
+// Role-specific capability restriction, not a second lifecycle. The canonical
+// validator below must still accept every requested edge.
+export type AmbassadorAction = 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'DELIVERY_FAILED';
+export const ambassadorActionsFor = (status: OperationStatus): readonly AmbassadorAction[] =>
+  normalTransitions[status].filter((target): target is AmbassadorAction =>
+    (status === 'AMBASSADOR_ASSIGNED' && target === 'OUT_FOR_DELIVERY') ||
+    (status === 'OUT_FOR_DELIVERY' && (target === 'DELIVERED' || target === 'DELIVERY_FAILED')));
+
 export const validateTransition = (from:OperationStatus,to:OperationStatus,metadata:TransitionMetadata):void => {
   if (!normalTransitions[from].includes(to)) throw new Error(`Transition ${from} -> ${to} is not allowed.`);
   if (['REJECTED','CANCELLED','DELIVERY_FAILED'].includes(to) && !metadata.reason?.trim()) throw new Error('A reason is required.');
