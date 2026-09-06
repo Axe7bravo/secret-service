@@ -1,6 +1,14 @@
 {
   "indexes": [
     {
+      "collectionGroup": "packages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "active", "order": "ASCENDING" },
+        { "fieldPath": "displayOrder", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "ambassadorOperations",
       "queryScope": "COLLECTION",
       "fields": [

@@ -1,13 +1,5 @@
 export declare const getCustomerCatalog: import("firebase-functions/v2/https").CallableFunction<any, Promise<{
-    packages: {
-        packageId: string;
-        code: string;
-        name: string;
-        description: string;
-        priceMinor: number;
-        currency: "ZAR";
-        displayOrder: number;
-    }[];
+    packages: import("./activePackageCatalog.js").CatalogPackage[];
     campuses: {
         campusId: string;
         code: string;

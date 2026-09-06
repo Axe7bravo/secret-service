@@ -2,22 +2,24 @@ import { type FormEvent, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { mapFirebaseAuthError } from '../../../../packages/firebase/src';
 import { useCustomerAuth } from '../auth/customerAuthContext';
+import { customerAuthDestination } from '../auth/customerAuthDestination';
+import { packageHintQuery, readPackageHint } from '@secret-service/config';
 
 export function CustomerLoginPage() {
   const { user, loading, signIn } = useCustomerAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const destination = customerAuthDestination(location.search, location.state);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  if (!loading && user) return <Navigate to="/dashboard" replace />;
+  if (!loading && user) return <Navigate to={destination} replace />;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setSubmitting(true); setError('');
     try {
       await signIn(email, password);
-      const destination = typeof location.state === 'object' && location.state && 'from' in location.state ? String(location.state.from) : '/dashboard';
       navigate(destination, { replace: true });
     } catch (authError) { setError(mapFirebaseAuthError(authError)); }
     finally { setSubmitting(false); }
@@ -31,7 +33,7 @@ export function CustomerLoginPage() {
       {error && <p role="alert" className="login-error">{error}</p>}
       <button type="submit" disabled={submitting || loading}>{submitting ? 'Authenticating…' : 'Access Files'}</button>
     </form>
-    <p>New to Secret Service? <Link to="/signup">Create an account</Link></p>
+    <p>New to Secret Service? <Link to={`/signup${packageHintQuery(readPackageHint(location.search))}`} state={location.state}>Create an account</Link></p>
     <aside className="customer-auth-notice"><strong>SECURE CUSTOMER ACCESS</strong><p>Your identity and private portal session are protected by Firebase Authentication.</p></aside>
   </section></main>;
 }

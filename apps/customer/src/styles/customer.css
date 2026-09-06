@@ -38,3 +38,6 @@
 .customer-payment-action{display:grid;justify-items:start;gap:.75rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)}.customer-payment-action p{margin:0;color:var(--muted);font-size:.72rem;line-height:1.5}.customer-payment-action span{color:#dc8989;font-size:.7rem}
 .payment-return-page{max-width:900px}.payment-return-card{display:grid;gap:1rem;padding:1.5rem;border:1px solid var(--border);border-left:2px solid #755e31;background:var(--surface)}.payment-return-card--cancelled,.payment-return-card--failed{border-left-color:var(--accent)}.payment-return-card>span{color:#c94c4c;font:700 .56rem 'Space Mono',monospace;letter-spacing:.14em}.payment-return-card>strong{font:600 1.35rem 'Space Grotesk',sans-serif}.payment-return-card>p{max-width:650px;margin:0;color:var(--muted);font-size:.78rem;line-height:1.65}.payment-return-card>div{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}.payment-return-card .customer-primary{min-height:38px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
+/* Keep the native calendar control visible against the delivery form's dark surface. */
+.operation-create-form input[type="date"]{color-scheme:dark}
+.operation-create-form input[type="date"]::-webkit-calendar-picker-indicator{opacity:1;cursor:pointer;width:1.25rem;height:1.25rem;padding:.4rem}

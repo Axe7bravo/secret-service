@@ -1,24 +1,28 @@
 import { type FormEvent, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { mapFirebaseAuthError } from '../../../../packages/firebase/src';
 import { useCustomerAuth } from '../auth/customerAuthContext';
+import { customerAuthDestination } from '../auth/customerAuthDestination';
+import { packageHintQuery, readPackageHint } from '@secret-service/config';
 
 export function CustomerSignupPage() {
   const { user, loading, signUp } = useCustomerAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const destination = customerAuthDestination(location.search, location.state);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  if (!loading && user) return <Navigate to="/dashboard" replace />;
+  if (!loading && user) return <Navigate to={destination} replace />;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setSubmitting(true); setError('');
     try {
       await signUp({ email, password, displayName: `${firstName} ${lastName}`.trim() });
-      navigate('/dashboard', { replace: true });
+      navigate(destination, { replace: true });
     } catch (authError) { setError(mapFirebaseAuthError(authError)); }
     finally { setSubmitting(false); }
   };
@@ -33,6 +37,6 @@ export function CustomerSignupPage() {
       {error && <p role="alert" className="login-error">{error}</p>}
       <button type="submit" disabled={submitting || loading}>{submitting ? 'Creating account…' : 'Create account'}</button>
     </form>
-    <p>Already registered? <Link to="/login">Log in</Link></p>
+    <p>Already registered? <Link to={`/login${packageHintQuery(readPackageHint(location.search))}`} state={location.state}>Log in</Link></p>
   </section></main>;
 }
