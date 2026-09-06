@@ -99,9 +99,12 @@ export interface PaymentRecord {
     amountMinor: number;
     currency: 'ZAR';
     status: PaymentStatus;
+    idempotencyKey?: string;
+    attemptNumber?: number;
     providerPaymentId?: string;
     providerCheckoutId?: string;
     checkoutUrl?: string;
+    processingMode?: string;
     failureCategory?: string;
     createdAt: Timestamp;
     updatedAt: Timestamp;

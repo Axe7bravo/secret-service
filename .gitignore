@@ -3,14 +3,9 @@ dist
 .env
 .env.local
 .env.*.local
+apps/functions/.env.*
 apps/*/dist
 *.log
-<<<<<<< HEAD
-.agents
-.claude
-.firebase
-=======
 .agents/
 .claude/
 .firebase/
->>>>>>> fix/admin-dashboard-design

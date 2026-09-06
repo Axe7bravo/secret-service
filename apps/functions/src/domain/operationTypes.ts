@@ -37,4 +37,4 @@ export interface CampusRecord {
 }
 
 export type PaymentStatus='PENDING'|'PAID'|'FAILED'|'CANCELLED'|'REFUNDED';
-export interface PaymentRecord {paymentId:string;operationId:string;customerId:string;provider:'YOCO';amountMinor:number;currency:'ZAR';status:PaymentStatus;providerPaymentId?:string;providerCheckoutId?:string;checkoutUrl?:string;failureCategory?:string;createdAt:Timestamp;updatedAt:Timestamp;paidAt?:Timestamp;failedAt?:Timestamp;refundedAt?:Timestamp}
+export interface PaymentRecord {paymentId:string;operationId:string;customerId:string;provider:'YOCO';amountMinor:number;currency:'ZAR';status:PaymentStatus;idempotencyKey?:string;attemptNumber?:number;providerPaymentId?:string;providerCheckoutId?:string;checkoutUrl?:string;processingMode?:string;failureCategory?:string;createdAt:Timestamp;updatedAt:Timestamp;paidAt?:Timestamp;failedAt?:Timestamp;refundedAt?:Timestamp}
