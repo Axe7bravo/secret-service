@@ -5,6 +5,8 @@ export interface ConfirmedProviderPayment {
     amountMinor: number;
     currency: 'ZAR';
 }
-/** Called only after a Yoco webhook adapter has verified authenticity. */
-export declare const confirmOperationPayment: (event: ConfirmedProviderPayment) => Promise<"CONFIRMED" | "ALREADY_CONFIRMED">;
+type SettlementResult = 'CONFIRMED' | 'ALREADY_CONFIRMED' | 'ADDITIONAL_SUCCESS';
+/** Internal only: called after signature verification and provider payload validation. */
+export declare const confirmOperationPayment: (event: ConfirmedProviderPayment) => Promise<SettlementResult>;
+export {};
 //# sourceMappingURL=confirmPayment.d.ts.map

@@ -38,9 +38,14 @@ const safeProviderError=(body:string):Record<string,string>=>{
     const parsed=asRecord(JSON.parse(body));
     if(!parsed)return{};
     const safe:Record<string,string>={};
-    for(const key of ['code','type','error','message'])if(typeof parsed[key]==='string')safe[key]=String(parsed[key]).slice(0,500);
+    // Provider prose/raw bodies can echo request data. Keep only bounded codes,
+    // never messages, HTML, credentials or payment instrument information.
+    for(const key of ['code','type']){
+      const value=parsed[key];
+      if(typeof value==='string'&&/^[A-Za-z][A-Za-z0-9_.:-]{0,79}$/.test(value)&&!/^sk_|^whsec_/i.test(value))safe[`provider_${key}`]=value;
+    }
     return safe;
-  }catch{return body.trim()?{message:body.trim().slice(0,500)}:{}}
+  }catch{return{}}
 };
 
 export const createYocoCheckout:YocoCheckoutProvider=async request=>{

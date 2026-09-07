@@ -2,8 +2,13 @@ node_modules
 dist
 .env
 .env.local
+.env.production
 .env.*.local
+apps/*/.env
+apps/*/.env.local
+apps/*/.env.production
 apps/functions/.env.*
+!apps/functions/.env.example
 apps/*/dist
 *.log
 .agents/

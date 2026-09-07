@@ -37,4 +37,13 @@ export interface CampusRecord {
 }
 
 export type PaymentStatus='PENDING'|'PAID'|'FAILED'|'CANCELLED'|'REFUNDED';
-export interface PaymentRecord {paymentId:string;operationId:string;customerId:string;provider:'YOCO';amountMinor:number;currency:'ZAR';status:PaymentStatus;idempotencyKey?:string;attemptNumber?:number;providerPaymentId?:string;providerCheckoutId?:string;checkoutUrl?:string;processingMode?:string;failureCategory?:string;createdAt:Timestamp;updatedAt:Timestamp;paidAt?:Timestamp;failedAt?:Timestamp;refundedAt?:Timestamp}
+export interface PaymentAttempt {
+  providerCheckoutId:string;amountMinor:number;currency:'ZAR';status:'PENDING'|'FAILED'|'SUCCEEDED';
+  providerPaymentId?:string;
+}
+export interface PaymentCheckoutRequest {
+  successUrl:string;cancelUrl:string;failureUrl:string;mode:'test'|'live';
+}
+export interface PaymentRecord {paymentId:string;operationId:string;customerId:string;provider:'YOCO';amountMinor:number;currency:'ZAR';status:PaymentStatus;idempotencyKey?:string;attemptNumber?:number;providerPaymentId?:string;providerCheckoutId?:string;checkoutUrl?:string;processingMode?:string;failureCategory?:string;createdAt:Timestamp;updatedAt:Timestamp;paidAt?:Timestamp;failedAt?:Timestamp;refundedAt?:Timestamp;
+  attempts?:PaymentAttempt[];providerCheckoutIds?:string[];settledCheckoutId?:string;checkoutRequest?:PaymentCheckoutRequest;
+}

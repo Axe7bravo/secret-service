@@ -8,6 +8,15 @@
       "hosting": {
         "admin": [
           "secretserviceadmin"
+        ],
+        "web": [
+          "secret-service-37f6b"
+        ],
+        "customer": [
+          "secretservicecustomer"
+        ],
+        "ambassador": [
+          "secretserviceambass"
         ]
       }
     }

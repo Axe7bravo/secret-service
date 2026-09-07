@@ -95,6 +95,19 @@ export interface CampusRecord {
     updatedAt: Timestamp;
 }
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED' | 'REFUNDED';
+export interface PaymentAttempt {
+    providerCheckoutId: string;
+    amountMinor: number;
+    currency: 'ZAR';
+    status: 'PENDING' | 'FAILED' | 'SUCCEEDED';
+    providerPaymentId?: string;
+}
+export interface PaymentCheckoutRequest {
+    successUrl: string;
+    cancelUrl: string;
+    failureUrl: string;
+    mode: 'test' | 'live';
+}
 export interface PaymentRecord {
     paymentId: string;
     operationId: string;
@@ -115,5 +128,9 @@ export interface PaymentRecord {
     paidAt?: Timestamp;
     failedAt?: Timestamp;
     refundedAt?: Timestamp;
+    attempts?: PaymentAttempt[];
+    providerCheckoutIds?: string[];
+    settledCheckoutId?: string;
+    checkoutRequest?: PaymentCheckoutRequest;
 }
 //# sourceMappingURL=operationTypes.d.ts.map

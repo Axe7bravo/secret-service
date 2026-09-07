@@ -8,7 +8,7 @@ export function AdminAuthGuard() {
   if (loading) return <main className="admin-auth-state" aria-live="polite"><p>Verifying secure access…</p></main>;
   if (error) return <main className="admin-auth-state"><h1>Authentication unavailable</h1><p role="alert">{error}</p></main>;
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
-  if (!claims.admin) return (
+  if (claims.role !== 'admin') return (
     <main className="admin-auth-state">
       <p className="eyebrow">ACCESS DENIED</p>
       <h1>Admin authorization required</h1>

@@ -24,7 +24,9 @@ The response must contain a checkout ID, HTTPS redirect URL, the expected intege
 
 ## Idempotency
 
-The payment document records `attemptNumber` and `idempotencyKey`. The key is deterministic: `<operationId>:checkout:<attemptNumber>`. Concurrent or repeated calls for the same pending attempt reuse the stored key, so Yoco converges them onto the same checkout. A completed checkout URL is returned directly. A retry after a failed provider attempt increments the attempt number and receives a new key. The stable payment document remains `payments/{operationId}`.
+The payment document records `attemptNumber` and `idempotencyKey`. The key is deterministic: `<operationId>:checkout:<attemptNumber>`. Concurrent calls and ambiguous checkout-creation failures reuse the same key and saved return URLs. A saved pending checkout URL is returned directly, including after abandonment. Only a signed failure for the saved current checkout permits a new key. Initiation errors remain pending with a diagnostic category; they are not evidence that Yoco created nothing. The stable payment document remains `payments/{operationId}`.
+
+Every registered checkout is retained in a bounded `attempts` array (maximum 20, no eviction) and a `providerCheckoutIds` lookup array. Each attempt stores checkout ID, immutable amount/currency, outcome and optional provider payment ID; operation/customer ownership comes from the unchanged parent record. `settledCheckoutId` identifies the winner. The existing top-level checkout/payment references are aligned to that winner on settlement so Admin reads remain consistent; a different checkout's redirect is removed. Other references remain in history. `checkoutRequest` preserves non-secret return URLs and test/live mode. Mode switches and legacy unknown-mode retries require operator review. Reaching the cap blocks creation, not reconciliation. No new collection or frontend model is needed.
 
 ## Customer returns
 
@@ -48,15 +50,21 @@ It is bound only to `YOCO_WEBHOOK_SECRET` and does not require Firebase Auth bec
 
 Supported `v1` signatures are base64-decoded and compared with `crypto.timingSafeEqual`. Timestamps outside the 180-second replay window are rejected before JSON processing. Invalid signatures are never acknowledged with 2xx.
 
-Only `payment.succeeded` and `payment.failed` are processed. Other verified events receive 2xx without mutation. The handler reconciles `metadata.checkoutId` against the uniquely stored `providerCheckoutId`; amount and currency are checked when present. It does not trust an operation ID in metadata as settlement authority.
+Only `payment.succeeded` and `payment.failed` are processed. Other verified events receive 2xx without mutation. The handler matches `payload.metadata.checkoutId` against stored checkout history, with an equality lookup for legacy current checkout records. Results are deduplicated by payment document ID and must identify exactly one document. The transaction rechecks history membership; arbitrary operation/customer metadata cannot substitute for a saved checkout.
+
+The [Yoco Checkout API payment notification](https://developer.yoco.com/api-reference/checkout-api/webhook-events/payment-notification) documents `payload.amount`, `payload.currency`, `payload.id` and `payload.metadata.checkoutId`. Successful events must supply a positive safe-integer amount, `ZAR` and the two provider identifiers at those locations. Amount/currency must exactly match the saved payment and operation snapshot. Missing, malformed or mismatched values never settle; stored amounts are not substituted for absent event data. Unsupported nested `data` variants are no longer guessed. Failure events validate amount/currency when supplied but cannot establish successful payment.
 
 ## Settlement and failure
 
 A successful verified event calls `confirmOperationPayment`. That transaction rechecks provider, checkout ID, amount, currency, ownership, immutable operation snapshot, payment state, and canonical transition. It atomically updates payment and operation state, writes activity, and rebuilds the customer projection while preserving `archived` and `archivedAt`. Duplicate success delivery returns 2xx without duplicate activity.
 
-Yoco payment webhook content is read from the documented top-level `payload` shape. The parser retains compatibility with a payload nested below `data`, but top-level `payload.metadata.checkoutId` is the primary reconciliation source. A provider-verified success can recover a matching local `FAILED` attempt as well as a `PENDING` attempt; checkout ID, amount, currency, operation state, and ownership must still reconcile before settlement.
+A provider-verified success can recover any retained legitimate checkout, including an older or failed attempt, while the operation remains eligible. The first success wins atomically. Same winning checkout/payment redeliveries do not change `paidAt`, projections or activity. A different successful checkout (or conflicting provider payment identifier) after settlement returns 2xx and logs `additional_payment_success`; its attempt outcome is retained without replacing the winner. Investigate a possible second provider charge manually. No automated refund or second local settlement is performed.
 
-A verified `payment.failed` event marks only the matching pending payment attempt failed and writes a safe activity record. The operation remains `PAYMENT_PENDING`, and a later customer retry creates a new attempt key. Raw provider diagnostics are not exposed to customers.
+A verified `payment.failed` event records its attempt failure once. Only failure of the current checkout changes the parent to `FAILED`; old failures cannot fail a newer reservation. Failure after `PAID` is ignored and cannot undo settlement. A saved failure remains in history after retry. Raw provider diagnostics are not exposed to customers.
+
+If an older success settles while a new checkout request is in flight, checkout-response persistence merges the freshly read payment rather than its stale reservation, records the new checkout for future reconciliation and does not return a redirect for the now-paid operation. A webhook received before its checkout reference is persisted receives non-2xx for later provider retry; it is never accepted solely from metadata.
+
+Timestamp verification and settlement idempotency are separate. Yoco documents [fresh signatures/timestamps on retries](https://developer.yoco.com/guides/online-payments/webhooks/verifying-the-events). The existing 180-second signed-delivery window and raw-body constant-time verification remain unchanged; the original event creation time is not used to reject a fresh delivery.
 
 ## Secrets and non-secret configuration
 
@@ -99,6 +107,7 @@ The success-return page's **Check status** control refreshes the customer's UID-
 - Secret material exists only in secret-bound Functions.
 - The browser supplies only an operation ID; amount and currency are authoritative server values.
 - Customers cannot write payment documents or set `PAID`.
+- Admin `transitionOperation` explicitly denies targets `PAID` and `REFUNDED` before any transaction. Canonical lifecycle validity does not grant actor authority. Ambassador commands retain their delivery-only allowlist. The internal settlement helper remains unexported from the deployed Functions index; only the verified webhook invokes it.
 - Return URLs cannot settle payment.
 - Webhook verification uses raw bytes, constant-time comparison, and replay protection.
 - Settlement requires an exact stored checkout match and is idempotent.
@@ -106,7 +115,35 @@ The success-return page's **Check status** control refreshes the customer's UID-
 
 ## Known limitations
 
-Refund initiation, accounting exports, notifications, stored cards, subscriptions, discounts, and historical attempt subcollections remain deferred. The current single payment document retains the current attempt plus its monotonically increasing attempt number rather than a full provider-attempt ledger.
+Refund initiation, accounting exports, notifications, stored cards, subscriptions, discounts, and historical attempt subcollections remain deferred. The bounded in-document history is not a general ledger. Existing top-level checkout references remain reconcilable without migration, but IDs already erased by old retry code cannot be recovered automatically. Reconcile legacy records and unknown processing modes with trusted provider evidence before live cutover; do not populate history from browser metadata or delete existing payment records.
+
+The [checkout API](https://developer.yoco.com/api-reference/checkout-api/checkout/create-checkout) documents an idempotency header, but the inspected reference does not specify its retention period. Do not assume indefinite provider deduplication or automatically rotate keys to escape an ambiguous error. Persistent ambiguity, expired/abandoned checkout recovery, merchant/key changes and a response lost before its ID was saved require operator reconciliation. No undocumented provider lookup endpoint was invented. Cancellation while payment is in flight remains a manual exception: settlement does not resurrect a cancelled operation; the verified event is logged and receives non-2xx pending reconciliation. Keep provider redelivery available and investigate promptly.
+
+## Payment-integrity repair verification (2026-09-07)
+
+Source reviewed and edited only; typecheck, lint, build, provider requests, tests and deployment were not run. Firebase Auth guidance informed the actor-authority restriction; no authentication setup or credentials changed. Admin action maps and payment screens already lacked manual paid/refund controls, so no UI edit was needed. Firestore client-write denials, safe customer projection and secret handling remain unchanged. The history query uses the normal single-field array index; no composite index or rules change was added. Verify the deployed index has not been disabled.
+
+Manual test matrix before live checkout:
+
+| Scenario | Required result |
+| --- | --- |
+| Admin calls `transitionOperation` to PAID/REFUNDED directly | Permission denied; no writes/activity |
+| Customer/Ambassador/redirect attempts settlement | No authorized route to settlement |
+| Missing/malformed/wrong success amount, currency or checkout | No settlement; non-2xx |
+| Two concurrent Pay Now calls / lost response | Same reservation key/body; one saved checkout and initiation activity |
+| Abandon checkout then retry | Existing pending redirect, not an invented expiry/new key |
+| Signed current failure then retry | New key; old reference and failed outcome retained |
+| Old checkout succeeds before new checkout | One atomic PAID update and safe CONFIRMED projection |
+| Old success during retry response persistence | Winner preserved; late response reference recorded; no new redirect |
+| Same success redelivered with fresh signed delivery | 2xx; same paidAt; one PAYMENT_CONFIRMED activity |
+| Different checkout succeeds after PAID | 2xx; anomaly log/outcome; no resettlement; operator investigates |
+| Failure after PAID / old failure during newer pending attempt | No paid regression / newer attempt remains pending |
+| Failure followed by success on same checkout | Valid success settles once if operation still eligible |
+| History at 20 checkouts | No new checkout; retained events still reconcile |
+| Legacy current checkout / two documents claiming same checkout | Legacy match works / ambiguity rejected |
+| Test/live mode switch or unknown legacy mode | New checkout refused pending review |
+
+Confirm immutable amount/currency/customer linkage, archived projection metadata, no privileged data leakage, and normal post-payment fulfilment after each successful settlement.
 
 ## Firebase Functions deployment initialization
 

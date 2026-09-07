@@ -14,6 +14,9 @@ export const transitionOperation=onCall<TransitionInput>(async request=>{
   try{
     const {operationId,toStatus}=request.data;const metadata=request.data.metadata??{};
     if(!operationId?.trim()||!toStatus)throw new HttpsError('invalid-argument','Operation ID and target status are required.');
+    // Lifecycle validity is not actor authority. Only verified settlement may
+    // establish PAID; no trusted refund implementation exists yet.
+    if(toStatus==='PAID'||toStatus==='REFUNDED')throw new HttpsError('permission-denied','Payment outcomes cannot be set through admin workflow actions.');
     const db=getAdminFirestore();const operationRef=db.collection('operations').doc(operationId);const internalRef=db.collection('operationInternal').doc(operationId);const projectionRef=db.collection('customerOperations').doc(operationId);const activityRef=db.collection('operationActivity').doc();const paymentRequiredActivityRef=db.collection('operationActivity').doc();
     await db.runTransaction(async transaction=>{
       const [operationSnapshot,internalSnapshot,projectionSnapshot]=await Promise.all([transaction.get(operationRef),transaction.get(internalRef),transaction.get(projectionRef)]);

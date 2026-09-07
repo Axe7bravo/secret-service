@@ -13,28 +13,20 @@ export const savePackage=onCall<unknown>(async request=>{
   logger.info('savePackage invoked',{uid:request.auth?.uid??null});
   let loggedPackageId:string|undefined;
   try{
-    logger.info('savePackage stage',{stage:'authorizing-admin'});
     requireAdmin(request);
-    logger.info('savePackage stage',{stage:'authorized-admin'});
     const input=parse(request.data);
     const packageId=input.packageId??input.code;
     loggedPackageId=packageId;
-    logger.info('savePackage stage',{stage:'validated-input',packageId});
     const db=getAdminFirestore();const ref=db.collection('packages').doc(packageId);const now=Timestamp.now();
-    logger.info('savePackage stage',{stage:'starting-transaction',packageId});
     await db.runTransaction(async transaction=>{
       const snapshot=await transaction.get(ref);
-      logger.info('savePackage stage',{stage:'read-package-document',packageId,exists:snapshot.exists});
       if(input.packageId&&!snapshot.exists)throw new HttpsError('not-found','Package no longer exists.');
       if(!input.packageId&&snapshot.exists)throw new HttpsError('already-exists','A package with that code already exists.');
       const existing=snapshot.exists?snapshot.data() as PackageRecord:undefined;
       if(existing&&existing.code!==input.code)throw new HttpsError('failed-precondition','Package code is a stable identifier and cannot be changed.');
       const record:PackageRecord={packageId,code:input.code,name:input.name,shortDescription:input.shortDescription,...(input.description?{description:input.description}:{}),priceMinor:input.priceMinor,currency:'ZAR',active:input.active,displayOrder:input.displayOrder,createdAt:existing?.createdAt??now,updatedAt:now};
-      logger.info('savePackage stage',{stage:'constructed-write-payload',packageId});
       transaction.set(ref,record);
-      logger.info('savePackage stage',{stage:'queued-package-write',packageId});
     });
-    logger.info('savePackage stage',{stage:'transaction-complete',packageId});
     logger.info('savePackage completed',{packageId});
     return{packageId};
   }catch(error){

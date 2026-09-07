@@ -2,6 +2,7 @@ import { type FormEvent, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { mapFirebaseAuthError } from '../../../../packages/firebase/src';
 import { useAdminAuth } from '../auth/adminAuthContext';
+import { adminDataMode } from '../data/adminReadRepository';
 
 export function AdminLoginPage() {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ export function AdminLoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  if (!loading && user && claims.admin) return <Navigate to="/dashboard" replace />;
+  if (!loading && user && claims.role === 'admin') return <Navigate to="/dashboard" replace />;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -43,7 +44,7 @@ export function AdminLoginPage() {
         {error && <p className="admin-login-error" role="alert">{error}</p>}
         <button type="submit" disabled={submitting || loading}>{submitting ? 'Verifying…' : 'Enter Operations Control'}</button>
       </form>
-      <aside className="development-access"><span>REAL AUTH · MOCK OPERATION DATA</span><p>Authentication uses Firebase. Admin operation data remains local for this milestone.</p></aside>
+      {adminDataMode === 'mock' && <aside className="development-access"><span>REAL AUTH · MOCK OPERATION DATA</span><p>Authentication uses Firebase. This development session uses local mock operation data.</p></aside>}
     </section>
   </main>;
 }

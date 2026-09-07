@@ -13,6 +13,10 @@ export const transitionOperation = onCall(async (request) => {
         const metadata = request.data.metadata ?? {};
         if (!operationId?.trim() || !toStatus)
             throw new HttpsError('invalid-argument', 'Operation ID and target status are required.');
+        // Lifecycle validity is not actor authority. Only verified settlement may
+        // establish PAID; no trusted refund implementation exists yet.
+        if (toStatus === 'PAID' || toStatus === 'REFUNDED')
+            throw new HttpsError('permission-denied', 'Payment outcomes cannot be set through admin workflow actions.');
         const db = getAdminFirestore();
         const operationRef = db.collection('operations').doc(operationId);
         const internalRef = db.collection('operationInternal').doc(operationId);
