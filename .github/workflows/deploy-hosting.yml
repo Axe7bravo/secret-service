@@ -48,7 +48,7 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ vars.FIREBASE_APP_ID }}
           VITE_DATA_SOURCE: firestore
-          VITE_CUSTOMER_APP_URL: ${{ vars.WEB_CUSTOMER_APP_URL }}
+          VITE_CUSTOMER_APP_URL: ${{ vars.CUSTOMER_APP_URL }}
 
       - name: Build customer dashboard
         run: npm run build --workspace=@secret-service/customer
