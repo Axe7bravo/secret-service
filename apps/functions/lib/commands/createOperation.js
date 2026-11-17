@@ -2,6 +2,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { requireAuthenticatedCustomer } from '../auth/requireAuthenticatedCustomer.js';
 import { getAdminFirestore } from '../firebaseAdmin.js';
+import { packageImageFor } from '../domain/packageImages.js';
 import { buildCustomerOperationProjection } from '../projection/customerOperationProjection.js';
 import { asCallableError } from './commandErrors.js';
 import { operationalSettingsFrom } from '../domain/operationalSettings.js';
@@ -87,8 +88,9 @@ export const createOperation = onCall(async (request) => {
             const selectedPackage = packageSnapshot.data();
             if (selectedPackage.packageId !== input.packageId || typeof selectedPackage.name !== 'string' || !Number.isInteger(selectedPackage.priceMinor) || selectedPackage.priceMinor < 0 || selectedPackage.currency !== 'ZAR')
                 throw new HttpsError('failed-precondition', 'Selected package record is invalid.');
-            if (!selectedPackage.active)
-                throw new HttpsError('failed-precondition', 'Selected package is inactive.');
+            if (!selectedPackage.active || selectedPackage.priceMinor <= 0 || !packageImageFor(input.packageId, selectedPackage.image)) {
+                throw new HttpsError('failed-precondition', 'Selected package is not published.');
+            }
             const selectedCampusData = campusSnapshot.data();
             if (!campusSnapshot.exists || !selectedCampusData)
                 throw new HttpsError('invalid-argument', 'Selected campus is unavailable.');

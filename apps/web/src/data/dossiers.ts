@@ -3,7 +3,7 @@ import type { DossierPresentation, PublicDossier, PublicPackage } from '../types
 // Presentation only. Names, descriptions, prices and availability come from Admin.
 const defaults: DossierPresentation = {
   stage: 'STAGING', timeframe: 'Confirmed during scheduling', clearance: 'Public catalogue',
-  tags: ['Hand Delivery'], image: '/assets/classified_case.jpg',
+  tags: ['Hand Delivery'],
 };
 const presentation: Record<string, Partial<DossierPresentation>> = {
   'secret-admirer': { stage: 'STAGING', timeframe: '24-48 Hours Staging', clearance: 'Level 1 (Public)', tags: ['Level 1 Clearance', 'Hand Delivery'] },

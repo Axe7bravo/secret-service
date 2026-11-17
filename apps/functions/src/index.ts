@@ -8,6 +8,7 @@ export { assignAmbassador } from './commands/assignAmbassador.js';
 export { ambassadorTransitionOperation } from './commands/ambassadorTransitionOperation.js';
 export { getCustomerCatalog } from './queries/getCustomerCatalog.js';
 export { getPublicCatalog } from './queries/getPublicCatalog.js';
+export { getAdminPackageImage, getPublicPackageImage } from './queries/packageImageEndpoints.js';
 export { setCustomerOperationArchived } from './commands/setCustomerOperationArchived.js';
 export { getAdminSettings } from './queries/getAdminSettings.js';
 export { saveAdminSettings } from './commands/saveAdminSettings.js';

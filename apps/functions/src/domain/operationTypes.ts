@@ -21,6 +21,7 @@ export interface OperationInternalRecord {
 }
 
 export interface PackageRecord {
+  image?: import('./packageImages.js').PackageImage;
   packageId:string;code:string;name:string;shortDescription:string;description?:string;
   priceMinor:number;currency:'ZAR';active:boolean;displayOrder:number;
   createdAt:Timestamp;updatedAt:Timestamp;

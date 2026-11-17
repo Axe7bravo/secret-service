@@ -3,6 +3,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { requireAuthenticatedCustomer } from '../auth/requireAuthenticatedCustomer.js';
 import { getAdminFirestore } from '../firebaseAdmin.js';
 import type { CampusRecord,OperationInternalRecord,OperationRecord,PackageRecord } from '../domain/operationTypes.js';
+import { packageImageFor } from '../domain/packageImages.js';
 import { buildCustomerOperationProjection } from '../projection/customerOperationProjection.js';
 import { asCallableError } from './commandErrors.js';
 import { operationalSettingsFrom,type OperationalSettingsRecord } from '../domain/operationalSettings.js';
@@ -101,7 +102,9 @@ export const createOperation = onCall<unknown>(async request => {
       if (!packageSnapshot.exists) throw new HttpsError('invalid-argument', 'Selected package is unavailable.');
       const selectedPackage = packageSnapshot.data() as PackageRecord;
       if (selectedPackage.packageId !== input.packageId || typeof selectedPackage.name !== 'string' || !Number.isInteger(selectedPackage.priceMinor) || selectedPackage.priceMinor < 0 || selectedPackage.currency !== 'ZAR') throw new HttpsError('failed-precondition', 'Selected package record is invalid.');
-      if (!selectedPackage.active) throw new HttpsError('failed-precondition', 'Selected package is inactive.');
+      if (!selectedPackage.active || selectedPackage.priceMinor <= 0 || !packageImageFor(input.packageId, selectedPackage.image)) {
+        throw new HttpsError('failed-precondition', 'Selected package is not published.');
+      }
       const selectedCampusData=campusSnapshot.data();
       if(!campusSnapshot.exists||!selectedCampusData)throw new HttpsError('invalid-argument','Selected campus is unavailable.');
       const selectedCampus=selectedCampusData as CampusRecord;

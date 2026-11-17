@@ -7,6 +7,7 @@ export interface PublicPackage {
   priceMinor: number;
   currency: 'ZAR';
   displayOrder: number;
+  imageUrl: string;
 }
 
 export interface DossierPresentation {
@@ -14,7 +15,6 @@ export interface DossierPresentation {
   timeframe: string;
   clearance: string;
   tags: readonly string[];
-  image: string;
 }
 
 export type PublicDossier = PublicPackage & DossierPresentation;

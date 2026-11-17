@@ -26,6 +26,7 @@ function isPackage(value: unknown): value is PublicPackage {
   const item = value as Record<string, unknown>;
   return typeof item.packageId === 'string' && typeof item.code === 'string'
     && typeof item.name === 'string' && typeof item.shortDescription === 'string'
+    && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('https://')
     && typeof item.description === 'string' && item.currency === 'ZAR'
     && typeof item.priceMinor === 'number' && Number.isSafeInteger(item.priceMinor) && item.priceMinor >= 0
     && typeof item.displayOrder === 'number' && Number.isSafeInteger(item.displayOrder) && item.displayOrder >= 0;
@@ -60,7 +61,7 @@ const mockRepository: PublicCatalogRepository = {
   async load() {
     diagnose('loaded', CAMPUS_OPERATION_PACKAGES.length);
     return CAMPUS_OPERATION_PACKAGES.map((item, index) => ({
-      packageId: item.id, code: item.id, name: item.name,
+      packageId: item.id, code: item.id, name: item.name, imageUrl: '/assets/classified_case.jpg',
       shortDescription: item.description, description: item.description,
       priceMinor: item.priceMinor, currency: item.currency, displayOrder: (index + 1) * 10,
     }));

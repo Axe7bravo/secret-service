@@ -8,6 +8,7 @@ export interface CatalogPackage {
     priceMinor: number;
     currency: 'ZAR';
     displayOrder: number;
+    imageUrl: string;
 }
 export declare function loadActivePackages(db: Firestore): Promise<CatalogPackage[]>;
 //# sourceMappingURL=activePackageCatalog.d.ts.map

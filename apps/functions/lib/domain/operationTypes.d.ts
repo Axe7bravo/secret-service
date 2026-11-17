@@ -59,6 +59,7 @@ export interface OperationInternalRecord {
     updatedAt: Timestamp;
 }
 export interface PackageRecord {
+    image?: import('./packageImages.js').PackageImage;
     packageId: string;
     code: string;
     name: string;
